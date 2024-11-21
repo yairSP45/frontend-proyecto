@@ -64,15 +64,16 @@ export default {
           property: false
         },
         endpoints: {
-          login: { url: 'auth/login', method: 'post' },
-          logout: { url: 'auth/logout', method: 'post' }
+          login: { url: '/auth/login', method: 'post' },
+          logout: { url: '/auth/logout', method: 'post' },
+          user: { url: '/auth/user', method: 'get' }
         }
       }
     },
     redirect: {
-      login: 'login',
+      login: '/',
       logout: '/',
-      home: 'dashboard'
+      home: '/dashboard'
     }
   },
 

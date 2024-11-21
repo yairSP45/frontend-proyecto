@@ -11,7 +11,7 @@
           <v-col cols="12" md="8" lg="6">
             <form @submit.prevent="login">
               <v-text-field
-                v-model="form.usuario"
+                v-model="usuario.usuario"
                 label="Usuario"
                 outlined
                 dense
@@ -20,7 +20,7 @@
                 style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; width: 868px; height: 40px; margin-top: 20px;"
               />
               <v-text-field
-                v-model="form.password"
+                v-model="usuario.password"
                 label="Password"
                 type="password"
                 outlined
@@ -30,7 +30,7 @@
                 style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; width: 868px; height: 40px; margin-top: 20px;"
               />
               <v-text-field
-                v-model="form.password"
+                v-model="confirmPassword"
                 label="Confirmar Password"
                 type="password"
                 outlined
@@ -40,9 +40,19 @@
                 style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; width: 868px; height: 40px; margin-top: 20px;"
               />
               <v-text-field
-                v-model="form.password"
+                v-model="usuario.apodo"
                 label="Apodo"
                 type="text"
+                outlined
+                dense
+                color="blue"
+                class="rounded-field black-text-field"
+                style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; width: 868px; height: 40px; margin-top: 20px;"
+              />
+              <v-combobox
+                v-model="usuario.rol"
+                :items="['Admin', 'Compras']"
+                label="Rol"
                 outlined
                 dense
                 color="blue"
@@ -57,14 +67,14 @@
         </v-row>
       </v-card-text>
       <v-card-actions class="d-flex flex-column align-center">
-        <v-btn color="#1B262C" class="mb-3" style="border-radius: 15px; width: 369px;" width="100%" @click="gotoSignUp">
-          <span style="text-transform: none; color: #FFFFFF;" @click="gotoSignUp">
+        <v-btn color="#1B262C" class="mb-3" style="border-radius: 15px; width: 369px;" width="100%" @click="registrarUsuario">
+          <span style="text-transform: none; color: #FFFFFF;">
             Registrate
           </span>
         </v-btn>
 
         <p class="text-center mt-4">
-          <a href="/" style="color: #3C2F3D; text-decoration: underline;">
+          <a style="color: #3C2F3D; text-decoration: underline;" @click="gotoLogin">
             ¿Tienes cuenta? Inicia sesión
           </a>
         </p>
@@ -77,11 +87,8 @@
 export default {
   data () {
     return {
-      form: {
-        usuario: '',
-        password: ''
-      },
-      errorMessage: ''
+      usuario: {},
+      confirmPassword: ''
     }
   },
   methods: {
@@ -97,8 +104,26 @@ export default {
         this.errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.'
       }
     },
-    gotoSignUp () {
-      this.$router.push('/signup')
+    gotoLogin () {
+      this.$router.push('/')
+    },
+    async registrarUsuario () {
+      if (this.usuario.password !== this.confirmPassword) {
+        this.errorMessage = 'Las contraseñas no coinciden.'
+        return
+      }
+      console.log('Datos enviados al backend:', this.usuario)
+      try {
+        const response = await this.$axios.post('/empleados/create', this.usuario)
+        if (response.data.success) {
+          this.$router.push('/') // Redirige a la página principal o a donde desees
+        } else {
+          this.errorMessage = 'Error al registrar el usuario.'
+        }
+      } catch (error) {
+        this.errorMessage = 'Ocurrió un error al registrar el usuario.'
+        console.error(error)
+      }
     }
   }
 }

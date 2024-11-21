@@ -76,11 +76,12 @@ export default {
         const res = await this.$auth.loginWith('local', {
           data: this.form
         })
+        console.log('@@ res => ', res)
         if (res && res.data && res.data.token) {
           this.$router.push('/dashboard')
         }
       } catch (error) {
-        this.errorMessage = 'Credenciales incorrectas. Inténtalo de nuevo.'
+        this.errorMessage = error
       }
     },
     gotoSignUp () {
