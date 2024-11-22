@@ -78,7 +78,7 @@ export default {
         })
         console.log('@@ res => ', res)
         if (res && res.data && res.data.token) {
-          this.$router.push('/dashboard')
+          this.$router.push('/dashboard/home')
         }
       } catch (error) {
         this.errorMessage = error
