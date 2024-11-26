@@ -106,9 +106,12 @@ export default {
   }
 
   .error {
-    color: red;
-    font-weight: bold;
-  }
+  color: #ffffff; /* Rojo vibrante para mayor visibilidad */
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 16px;
+}
 
   .rounded-field .v-input__control {
     border-radius: 50px;
