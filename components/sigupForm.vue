@@ -59,11 +59,11 @@
                 class="rounded-field black-text-field"
                 style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; width: 868px; height: 40px; margin-top: 20px;"
               />
-              <v-row v-if="errorMessage" class="error mt-3 text-center">
-                {{ errorMessage }}
-              </v-row>
             </form>
           </v-col>
+        </v-row>
+        <v-row v-if="errorMessage" class="error mt-3 text-center">
+          {{ errorMessage }}
         </v-row>
       </v-card-text>
       <v-card-actions class="d-flex flex-column align-center">
@@ -108,11 +108,20 @@ export default {
       this.$router.push('/')
     },
     async registrarUsuario () {
+      // Validar que todos los campos estén completos
+      if (!this.usuario.usuario || !this.usuario.password || !this.confirmPassword || !this.usuario.apodo || !this.usuario.rol) {
+        this.errorMessage = 'Todos los campos son obligatorios.'
+        return
+      }
+
+      // Validar que las contraseñas coincidan
       if (this.usuario.password !== this.confirmPassword) {
         this.errorMessage = 'Las contraseñas no coinciden.'
         return
       }
+
       console.log('Datos enviados al backend:', this.usuario)
+
       try {
         const response = await this.$axios.post('/empleados/create', this.usuario)
         if (response.data.success) {
@@ -125,6 +134,7 @@ export default {
         console.error(error)
       }
     }
+
   }
 }
 </script>
@@ -143,10 +153,12 @@ export default {
   }
 
   .error {
-    color: red;
-    font-weight: bold;
-  }
-
+  color: #ffffff; /* Rojo vibrante para mayor visibilidad */
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 16px;
+}
   .rounded-field .v-input__control {
     border-radius: 50px;
   }
