@@ -3,18 +3,18 @@
     <v-card flat elevation="0" width="600" color="#FFFFFF">
       <v-card-title>
         <p class="title" style="width: 100%; color: #000000; justify-content: left;">
-          {{ inside && update ? 'Actualiza el Contacto' : (inside ? 'Registra un Nuevo Contacto' : '') }}
+          {{ inside && update ? 'Actualiza la Venta' : (inside ? 'Registrar Nueva Venta' : '') }}
         </p>
       </v-card-title>
       <v-card-text style="color: #000000; justify-content: center; display: flex; flex-direction: column; height: 100%;">
         <v-row justify="center" align="center">
           <v-col>
-            <form @submit.prevent="registrarUsuario">
+            <form @submit.prevent="registrarVenta">
               <!-- Primera fila de campos -->
               <v-row>
                 <v-col cols="12" sm="6" md="6">
                   <v-text-field
-                    v-model="usuario.nombre"
+                    v-model="venta.item"
                     label="Nombre"
                     outlined
                     dense
@@ -25,13 +25,14 @@
                 </v-col>
                 <v-col cols="12" sm="6" md="6">
                   <v-text-field
-                    v-model="usuario.apaterno"
-                    label="A. Paterno"
+                    :value="venta.ref"
+                    label="Referencia (Automática)"
                     outlined
                     dense
                     color="blue"
                     class="rounded-field black-text-field"
                     style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    readonly
                   />
                 </v-col>
               </v-row>
@@ -40,19 +41,20 @@
               <v-row>
                 <v-col cols="12" sm="6" md="6">
                   <v-text-field
-                    v-model="usuario.amaterno"
-                    label="A. Materno"
+                    v-model="venta.precio"
+                    label="Precio"
                     outlined
                     dense
                     color="blue"
                     class="rounded-field black-text-field"
                     style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    @input="calcularTotal"
                   />
                 </v-col>
                 <v-col cols="12" sm="6" md="6">
                   <v-text-field
-                    v-model="usuario.direccion"
-                    label="Dirección"
+                    v-model="venta.descripcion"
+                    label="Descripcion"
                     outlined
                     dense
                     color="blue"
@@ -65,40 +67,28 @@
               <!-- Tercera fila de campos -->
               <v-row>
                 <v-col cols="12" sm="6" md="6">
-                  <v-text-field
-                    v-model="usuario.ciudad"
-                    label="Ciudad"
+                  <v-select
+                    v-model="venta.cantidad"
+                    :items="cantidades"
+                    label="Cantidad"
                     outlined
                     dense
                     color="blue"
                     class="rounded-field black-text-field"
                     style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    @change="calcularTotal"
                   />
                 </v-col>
                 <v-col cols="12" sm="6" md="6">
                   <v-text-field
-                    v-model="usuario.estado"
-                    label="Estado"
+                    :value="venta.total"
+                    label="Total (Automático)"
                     outlined
                     dense
                     color="blue"
                     class="rounded-field black-text-field"
                     style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
-                  />
-                </v-col>
-              </v-row>
-
-              <!-- Cuarta fila de campos -->
-              <v-row>
-                <v-col md="6" justify="center" cols="1">
-                  <v-text-field
-                    v-model="usuario.telefono"
-                    label="Teléfono"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    readonly
                   />
                 </v-col>
               </v-row>
@@ -111,10 +101,10 @@
         </v-row>
       </v-card-text>
       <v-card-actions class="d-flex flex-column align-center">
-        <!-- Botón para crear un nuevo usuario -->
-        <v-btn color="#1B262C" class="mb-3" style="border-radius: 15px; width: 369px;" @click="registrarUsuario">
+        <!-- Botón para crear nueva venta -->
+        <v-btn color="#1B262C" class="mb-3" style="border-radius: 15px; width: 369px;" @click="registrarVenta">
           <span style="text-transform: none; color: #FFFFFF;">
-            {{ inside && update ? 'Actualizar' : (inside ? 'Crear Nuevo' : '') }}
+            {{ inside && update ? 'Actualizar' : (inside ? 'Crear Nueva' : '') }}
           </span>
         </v-btn>
 
@@ -129,100 +119,120 @@
   </v-container>
 </template>
 
+
 <script>
 export default {
   props: {
     inside: { type: Boolean, default: false },
     update: { type: Boolean, default: false },
-    empleadoUpdate: { type: Object, default: null }
+    ventaUpdate: { type: Object, default: null } // Datos del registro a editar
   },
-  data () {
+  data() {
     return {
-      usuario: {},
-      errorMessage: ''
-    }
+      venta: {
+        item: '',
+        ref: Math.floor(Math.random() * 1000), // Generar referencia por defecto
+        precio: '',
+        descripcion: '',
+        cantidad: null,
+        total: ''
+      },
+      errorMessage: '',
+      cantidades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    };
   },
-  mounted () {
-    if (this.update && this.empleadoUpdate) {
-      this.usuario = this.empleadoUpdate
-    }
+  mounted() {
+    this.inicializarFormulario();
   },
   methods: {
-    gotoLogin () {
-      this.$router.push('/')
+    inicializarFormulario() {
+      if (this.update && this.ventaUpdate) {
+        // Cargar datos existentes para edición
+        this.venta = { ...this.ventaUpdate };
+      } else {
+        // Limpieza para nuevo registro
+        this.limpiarFormulario();
+      }
     },
-    async registrarUsuario () {
-      // Validar que los campos obligatorios estén llenos
-      if (!this.usuario.nombre || !this.usuario.apaterno || !this.usuario.amaterno || !this.usuario.direccion || !this.usuario.ciudad || !this.usuario.estado || !this.usuario.telefono) {
-        this.errorMessage = 'Todos los campos son obligatorios.'
-        return
+    limpiarFormulario() {
+      this.venta = {
+        item: '',
+        ref: Math.floor(Math.random() * 1000), // Generar nueva referencia
+        precio: '',
+        descripcion: '',
+        cantidad: null,
+        total: ''
+      };
+      this.errorMessage = '';
+    },
+    calcularTotal() {
+      const precio = parseFloat(this.venta.precio) || 0;
+      const cantidad = parseInt(this.venta.cantidad) || 0;
+      this.venta.total = precio * cantidad;
+    },
+    async registrarVenta() {
+      if (
+        !this.venta.item ||
+        !this.venta.ref ||
+        !this.venta.precio ||
+        !this.venta.descripcion ||
+        !this.venta.cantidad ||
+        !this.venta.total
+      ) {
+        this.errorMessage = 'Todos los campos son obligatorios.';
+        return;
       }
-
-      console.log('Datos enviados:', this.usuario)
-
-      // Asegurar valores por defecto para campos no obligatorios
-      const usuarioData = {
-        nombre: this.usuario.nombre || '',
-        apaterno: this.usuario.apaterno || '',
-        amaterno: this.usuario.amaterno || '',
-        direccion: this.usuario.direccion || '',
-        ciudad: this.usuario.ciudad || '',
-        estado: this.usuario.estado || '',
-        telefono: this.usuario.telefono || ''
-      }
-
-      let response
       try {
+        let response;
         if (this.update) {
-          // Llamada a la API para actualizar
-          response = await this.$axios.put(`/clientes/update/${this.usuario.id}`, usuarioData)
+          // Actualizar registro existente
+          response = await this.$axios.put(
+            `/ventas/update/${this.venta.id}`,
+            this.venta
+          );
         } else {
-          // Llamada a la API para crear
-          response = await this.$axios.post('/clientes/create', usuarioData)
+          // Crear nuevo registro
+          response = await this.$axios.post('/ventas/create', this.venta);
         }
-        console.log('@@@ response =>', response)
         if (response.data.success) {
-          this.usuario = {}
-          this.errorMessage = ''
-          if (this.inside) {
-            if (this.update) {
-              this.$store.commit('setType', 'warning')
-              this.$store.commit('setColor', 'warning')
-              this.$store.commit('setMensaje', 'El usuario fue actualizado exitosamente')
-              this.$store.commit('setShowAlert', true)
-            } else {
-              this.$store.commit('setType', 'success')
-              this.$store.commit('setColor', 'green')
-              this.$store.commit('setMensaje', 'El usuario fue creado exitosamente')
-              this.$store.commit('setShowAlert', true)
-            }
-            this.$emit('guardado')
-          } else {
-            this.$router.push('/')
-          }
+          this.$emit('guardado');
+          this.limpiarFormulario();
         } else {
-          this.errorMessage = response.data.message || 'Algo salió mal.'
-          this.$store.commit('setType', 'error')
-          this.$store.commit('setColor', 'red')
-          this.$store.commit('setMensaje', this.errorMessage)
-          this.$store.commit('setShowAlert', true)
+          this.errorMessage = response.data.message || 'Error al guardar.';
         }
       } catch (error) {
-        console.error('Error al registrar el usuario:', error)
-        this.errorMessage = 'Error en la comunicación con el servidor.'
-        this.$store.commit('setType', 'error')
-        this.$store.commit('setColor', 'red')
-        this.$store.commit('setMensaje', this.errorMessage)
-        this.$store.commit('setShowAlert', true)
+        this.errorMessage = 'Error en la comunicación con el servidor.';
+        console.error(error);
       }
     },
-    // Función para el botón de cancelar
-    cancelar () {
-      this.$emit('click-cancel') // Redirige al inicio o donde desees al cancelar
+    cancelar() {
+      this.$emit('click-cancel');
+      this.limpiarFormulario();
+    }
+  },
+  watch: {
+    // Si se actualizan las propiedades externas, reiniciamos el formulario
+    ventaUpdate: {
+      immediate: true,
+      handler(newValue) {
+        if (newValue && this.update) {
+          this.venta = { ...newValue };
+        }
+      }
+    },
+    update: {
+      immediate: true,
+      handler(isUpdate) {
+        if (!isUpdate) {
+          this.limpiarFormulario();
+        }
+      }
     }
   }
-}
+};
 </script>
+
+
 
 <style scoped>
 .login-container {
