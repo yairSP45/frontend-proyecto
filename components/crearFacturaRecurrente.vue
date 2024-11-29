@@ -4,7 +4,7 @@
       <v-card-title>
         <div class="d-flex justify-space-between align-center">
           <h1 class="title">
-            NUEVA COTIZACIÓN
+            NUEVA FACTURA RECURRENTE
           </h1>
         </div>
       </v-card-title>
@@ -15,14 +15,29 @@
           <v-row>
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
-                Contacto
+                Numeración
+              </h4>
+              <v-select
+                v-model="numeracionSeleccionada"
+                :items="numeraciones"
+                item-text="nombre"
+                item-value="id"
+                label="Numeración"
+                dense
+                outlined
+                required
+              />
+            </v-col>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Cliente
               </h4>
               <v-select
                 v-model="contactoSeleccionado"
                 :items="contactos"
                 item-text="nombre"
                 item-value="id"
-                label="Contacto"
+                label="Cliente"
                 dense
                 outlined
                 required
@@ -31,29 +46,9 @@
             </v-col>
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
-                Teléfono
+                Observaciones
               </h4>
-              <v-text-field
-                v-model="telefono"
-                label="Teléfono"
-                outlined
-                dense
-                disabled
-                required
-                readonly
-              />
-            </v-col>
-            <v-col cols="12" sm="4" class="d-flex align-center">
-              <h4 class="mr-2">
-                Número de Nota
-              </h4>
-              <v-text-field
-                v-model="numeroNota"
-                label="Número de Nota"
-                outlined
-                dense
-                required
-              />
+              <v-textarea v-model="observaciones" label="Observaciones" dense outlined />
             </v-col>
           </v-row>
 
@@ -61,7 +56,7 @@
           <v-row>
             <v-col cols="12" sm="6" class="d-flex align-center">
               <h4 class="mr-2">
-                Fecha
+                Fecha de inicio
               </h4>
               <v-menu
                 ref="menu1"
@@ -72,8 +67,8 @@
               >
                 <template #activator="{ on, attrs }">
                   <v-text-field
-                    v-model="fecha"
-                    label="Fecha"
+                    v-model="fechaInicio"
+                    label="Fecha de inicio"
                     readonly
                     dense
                     outlined
@@ -81,12 +76,12 @@
                     v-on="on"
                   />
                 </template>
-                <v-date-picker v-model="fecha" @input="menuFecha = false" />
+                <v-date-picker v-model="fechaInicio" @input="menuFecha = false" />
               </v-menu>
             </v-col>
             <v-col cols="12" sm="6" class="d-flex align-center">
               <h4 class="mr-2">
-                Vencimiento
+                Última fecha
               </h4>
               <v-menu
                 ref="menu2"
@@ -97,8 +92,8 @@
               >
                 <template #activator="{ on, attrs }">
                   <v-text-field
-                    v-model="fechaVencimiento"
-                    label="Fecha de Vencimiento"
+                    v-model="ultimaFecha"
+                    label="Última fecha"
                     readonly
                     dense
                     outlined
@@ -106,8 +101,100 @@
                     v-on="on"
                   />
                 </template>
-                <v-date-picker v-model="fechaVencimiento" @input="menuVencimiento = false" />
+                <v-date-picker v-model="ultimaFecha" @input="menuVencimiento = false" />
               </v-menu>
+            </v-col>
+          </v-row>
+
+          <!-- Término, Fecha de expiración, Frecuencia y Lista de precio -->
+          <v-row>
+            <v-col cols="12" sm="3" class="d-flex align-center">
+              <h4 class="mr-2">
+                Término
+              </h4>
+              <v-menu
+                ref="menuTermino"
+                v-model="menuTerminoVisible"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="terminoFecha"
+                    label="Término"
+                    readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                  />
+                </template>
+                <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
+              </v-menu>
+            </v-col>
+            <v-col cols="12" sm="3" class="d-flex align-center">
+              <h4 class="mr-2">
+                Fecha de expiración
+              </h4>
+              <v-menu
+                ref="menuExpiracion"
+                v-model="menuExpiracionVisible"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="fechaExpiracion"
+                    label="Fecha de expiración"
+                    readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                  />
+                </template>
+                <v-date-picker v-model="fechaExpiracion" @input="menuExpiracionVisible = false" />
+              </v-menu>
+            </v-col>
+            <v-col cols="12" sm="3" class="d-flex align-center">
+              <h4 class="mr-2">
+                Frecuencia
+              </h4>
+              <v-select
+                v-model="frecuenciaSeleccionada"
+                :items="frecuencias"
+                item-text="nombre"
+                item-value="id"
+                label="Frecuencia"
+                dense
+                outlined
+              />
+            </v-col>
+            <v-col cols="12" sm="3" class="d-flex align-center">
+              <h4 class="mr-2">
+                Lista de precio
+              </h4>
+              <v-select
+                v-model="listaPrecioSeleccionada"
+                :items="listasPrecio"
+                item-text="nombre"
+                item-value="id"
+                label="Lista de precio"
+                dense
+                outlined
+              />
+            </v-col>
+          </v-row>
+
+          <!-- Notas de la factura -->
+          <v-row>
+            <v-col cols="12" class="d-flex align-center">
+              <h5 class="mr-2">
+                Notas de Factura
+              </h5>
+              <v-textarea v-model="notas" label="Notas de Factura" dense outlined style="font-size: 12px;" />
             </v-col>
           </v-row>
 
@@ -196,29 +283,6 @@
             </v-col>
           </v-row>
 
-          <!-- Firma -->
-          <!--  <v-row>
-            <v-col cols="12" class="text-center">
-              <h4 class="mb-2">
-                Firma
-              </h4>
-              <v-btn outlined color="blue">
-                Usar Firma
-              </v-btn>
-            </v-col>
-          </v-row> -->
-
-          <!-- Notas -->
-          <v-row>
-            <v-col cols="12" class="d-flex align-center">
-              <h4 class="mr-2">
-                Notas
-              </h4>
-              <v-textarea v-model="notas" label="Notas" dense outlined />
-            </v-col>
-          </v-row>
-
-          <!-- Botones -->
           <v-row>
             <v-col cols="12" class="d-flex justify-space-between">
               <v-btn outlined color="grey">
@@ -353,13 +417,13 @@ export default {
       const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
       this.telefono = contacto ? contacto.telefono : ''
     }
+
   }
 }
 </script>
 
-<style scoped>
-.quote-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-</style>
+  <style scoped>
+  .quote-container {
+    margin: 0 auto;
+  }
+  </style>
