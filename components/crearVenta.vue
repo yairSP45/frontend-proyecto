@@ -119,7 +119,6 @@
   </v-container>
 </template>
 
-
 <script>
 export default {
   props: {
@@ -127,7 +126,7 @@ export default {
     update: { type: Boolean, default: false },
     ventaUpdate: { type: Object, default: null } // Datos del registro a editar
   },
-  data() {
+  data () {
     return {
       venta: {
         item: '',
@@ -139,22 +138,41 @@ export default {
       },
       errorMessage: '',
       cantidades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    };
+    }
   },
-  mounted() {
-    this.inicializarFormulario();
-  },
-  methods: {
-    inicializarFormulario() {
-      if (this.update && this.ventaUpdate) {
-        // Cargar datos existentes para edición
-        this.venta = { ...this.ventaUpdate };
-      } else {
-        // Limpieza para nuevo registro
-        this.limpiarFormulario();
+  watch: {
+    // Si se actualizan las propiedades externas, reiniciamos el formulario
+    ventaUpdate: {
+      immediate: true,
+      handler (newValue) {
+        if (newValue && this.update) {
+          this.venta = { ...newValue }
+        }
       }
     },
-    limpiarFormulario() {
+    update: {
+      immediate: true,
+      handler (isUpdate) {
+        if (!isUpdate) {
+          this.limpiarFormulario()
+        }
+      }
+    }
+  },
+  mounted () {
+    this.inicializarFormulario()
+  },
+  methods: {
+    inicializarFormulario () {
+      if (this.update && this.ventaUpdate) {
+        // Cargar datos existentes para edición
+        this.venta = { ...this.ventaUpdate }
+      } else {
+        // Limpieza para nuevo registro
+        this.limpiarFormulario()
+      }
+    },
+    limpiarFormulario () {
       this.venta = {
         item: '',
         ref: Math.floor(Math.random() * 1000), // Generar nueva referencia
@@ -162,15 +180,15 @@ export default {
         descripcion: '',
         cantidad: null,
         total: ''
-      };
-      this.errorMessage = '';
+      }
+      this.errorMessage = ''
     },
-    calcularTotal() {
-      const precio = parseFloat(this.venta.precio) || 0;
-      const cantidad = parseInt(this.venta.cantidad) || 0;
-      this.venta.total = precio * cantidad;
+    calcularTotal () {
+      const precio = parseFloat(this.venta.precio) || 0
+      const cantidad = parseInt(this.venta.cantidad) || 0
+      this.venta.total = precio * cantidad
     },
-    async registrarVenta() {
+    async registrarVenta () {
       if (
         !this.venta.item ||
         !this.venta.ref ||
@@ -179,60 +197,39 @@ export default {
         !this.venta.cantidad ||
         !this.venta.total
       ) {
-        this.errorMessage = 'Todos los campos son obligatorios.';
-        return;
+        this.errorMessage = 'Todos los campos son obligatorios.'
+        return
       }
       try {
-        let response;
+        let response
         if (this.update) {
           // Actualizar registro existente
           response = await this.$axios.put(
             `/ventas/update/${this.venta.id}`,
             this.venta
-          );
+          )
         } else {
           // Crear nuevo registro
-          response = await this.$axios.post('/ventas/create', this.venta);
+          response = await this.$axios.post('/ventas/create', this.venta)
         }
         if (response.data.success) {
-          this.$emit('guardado');
-          this.limpiarFormulario();
+          this.$emit('guardado')
+          this.limpiarFormulario()
         } else {
-          this.errorMessage = response.data.message || 'Error al guardar.';
+          this.errorMessage = response.data.message || 'Error al guardar.'
         }
       } catch (error) {
-        this.errorMessage = 'Error en la comunicación con el servidor.';
-        console.error(error);
+        this.errorMessage = 'Error en la comunicación con el servidor.'
+        console.error(error)
       }
     },
-    cancelar() {
-      this.$emit('click-cancel');
-      this.limpiarFormulario();
-    }
-  },
-  watch: {
-    // Si se actualizan las propiedades externas, reiniciamos el formulario
-    ventaUpdate: {
-      immediate: true,
-      handler(newValue) {
-        if (newValue && this.update) {
-          this.venta = { ...newValue };
-        }
-      }
-    },
-    update: {
-      immediate: true,
-      handler(isUpdate) {
-        if (!isUpdate) {
-          this.limpiarFormulario();
-        }
-      }
+    cancelar () {
+      this.$emit('click-cancel')
+      this.limpiarFormulario()
     }
   }
-};
+}
 </script>
-
-
 
 <style scoped>
 .login-container {
