@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import ventasCrud from '../../../components/ventasCrud.vue'
+import ventasCrud from '~/components/ventasCrud.vue'
 export default {
   components: {
     ventasCrud
