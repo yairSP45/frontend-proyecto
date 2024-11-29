@@ -106,11 +106,14 @@
     <v-dialog v-model="dialogUpdate" width="600" persistent>
       <crearVenta :inside="true" :update="true" :venta-update="ventaActualizar" @click-cancel="dialogUpdate = false" @guardado="ventasGuardado" />
     </v-dialog>
-    <v-dialog v-model="dialogCreateCotizacion" width="800" persistent>
+    <v-dialog v-model="dialogCreateCotizacion" width="1400" persistent>
       <crear-cotizacion :inside="true" @click-cancel="dialogCreateCotizacion = false" />
     </v-dialog>
     <v-dialog v-model="dialogUpdateCotizacion" width="600" persistent>
       <crear-cotizacion :inside="true" :update="true" :cotizacion-update="cotizacionActualizar" @click-cancel="dialogUpdateCotizacion = false" />
+    </v-dialog>
+    <v-dialog v-model="dialogCreateFacturaRecurrente" width="1400" persistent>
+      <crear-factura-recurrente :inside="true" @click-cancel="dialogCreateFacturaRecurrente = false" />
     </v-dialog>
   </div>
 </template>
@@ -118,11 +121,13 @@
 <script>
 import crearVenta from './crearVenta.vue'
 import CrearCotizacion from './crearCotizacion.vue'
+import CrearFacturaRecurrente from './crearFacturaRecurrente.vue'
 
 export default {
   components: {
     crearVenta,
-    CrearCotizacion
+    CrearCotizacion,
+    CrearFacturaRecurrente
   },
   data () {
     return {
@@ -137,6 +142,7 @@ export default {
       dialogCreateCotizacion: false,
       dialogUpdate: false,
       dialogUpdateCotizacion: false,
+      dialogCreateFacturaRecurrente: false,
       dialogBorrar: false,
       ventaActualizar: {},
       cotizacionActualizar: {}
@@ -241,7 +247,7 @@ export default {
         this.dialogCreateCotizacion = true
       } else if (this.selectedOption === 'Facturas Recurrentes') {
       // Aquí puedes agregar lógica para abrir el modal correspondiente
-        console.log('Abrir modal para Facturas Recurrentes')
+        this.dialogCreateFacturaRecurrente = true
       }
     },
     update (item) {
