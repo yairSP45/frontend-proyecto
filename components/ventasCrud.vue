@@ -100,7 +100,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogCreate" width="600" persistent>
+    <v-dialog v-model="dialogCreate" width="1000" persistent>
       <crearVenta :inside="true" @click-cancel="dialogCreate = false" @guardado="ventasGuardado" />
     </v-dialog>
     <v-dialog v-model="dialogUpdate" width="600" persistent>
@@ -112,7 +112,7 @@
     <v-dialog v-model="dialogUpdateCotizacion" width="600" persistent>
       <crear-cotizacion :inside="true" :update="true" :cotizacion-update="cotizacionActualizar" @click-cancel="dialogUpdateCotizacion = false" />
     </v-dialog>
-    <v-dialog v-model="dialogCreateFacturaRecurrente" width="1400" persistent>
+    <v-dialog v-model="dialogCreateFacturaRecurrente" width="1200" persistent>
       <crear-factura-recurrente :inside="true" @click-cancel="dialogCreateFacturaRecurrente = false" />
     </v-dialog>
   </div>
@@ -165,7 +165,7 @@ export default {
           { text: 'Total', value: 'total' },
           { text: 'Acciones', value: 'acciones' }
         ]
-        this.buttonText = 'Nueva Venta'
+        this.buttonText = 'Nueva Factura'
         this.pageTitle = 'Ventas'
         this.getData()
       } else if (option === 'Cotización') {
