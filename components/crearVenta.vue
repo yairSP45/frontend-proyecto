@@ -1,266 +1,518 @@
 <template>
-  <v-container fill-height fluid class="login-container">
-    <v-card flat elevation="0" width="600" color="#FFFFFF">
-      <v-card-title>
-        <p class="title" style="width: 100%; color: #000000; justify-content: left;">
-          {{ inside && update ? 'Actualiza la Venta' : (inside ? 'Registrar Nueva Venta' : '') }}
-        </p>
-      </v-card-title>
-      <v-card-text style="color: #000000; justify-content: center; display: flex; flex-direction: column; height: 100%;">
-        <v-row justify="center" align="center">
-          <v-col>
-            <form @submit.prevent="registrarVenta">
-              <!-- Primera fila de campos -->
-              <v-row>
-                <v-col cols="12" sm="6" md="6">
+  <v-container class="quote-container" width="1000">
+    <v-card flat elevation="0" color="#FFFFFF">
+      <div class="d-flex justify-space-between align-center" style="margin: 20px;">
+        <h1 class="title">
+          NUEVA FACTURA
+        </h1>
+      </div>
+
+      <v-card-text>
+        <v-form @submit.prevent="guardarCotizacion">
+          <!-- Información general -->
+          <v-row>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                No. Nota
+              </h4>
+              <v-text-field
+                v-model="numeroNota"
+                label="No. Nota"
+                dense
+                outlined
+                class="text-right"
+              />
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Contacto
+              </h4>
+              <v-select
+                v-model="contactoSeleccionado"
+                :items="contactos"
+                item-text="nombre"
+                item-value="id"
+                label="Contacto"
+                dense
+                outlined
+                required
+                @change="actualizarTelefono"
+              />
+            </v-col>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Teléfono
+              </h4>
+              <v-text-field
+                v-model="telefono"
+                label="Teléfono"
+                dense
+                outlined
+                disabled
+                required
+                readonly
+              />
+            </v-col>
+
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Tipo de pago
+              </h4>
+              <v-select
+                v-model="tipoPago"
+                :items="['Contado', 'Crédito']"
+                label="Tipo de pago"
+                dense
+                outlined
+                required
+              />
+            </v-col>
+          </v-row>
+
+          <!-- Fechas -->
+          <v-row>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Fecha
+              </h4>
+              <v-menu
+                ref="menuFecha"
+                v-model="menuFecha"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
                   <v-text-field
-                    v-model="venta.item"
-                    label="Nombre"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="6">
-                  <v-text-field
-                    :value="venta.ref"
-                    label="Referencia (Automática)"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    v-model="fecha"
+                    label="Fecha"
                     readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
                   />
-                </v-col>
-              </v-row>
-
-              <!-- Segunda fila de campos -->
-              <v-row>
-                <v-col cols="12" sm="6" md="6">
+                </template>
+                <v-date-picker v-model="fecha" @input="menuFecha = false" />
+              </v-menu>
+            </v-col>
+            <v-col cols="12" sm="3" class="d-flex align-center">
+              <h4 class="mr-2">
+                Término
+              </h4>
+              <v-menu
+                ref="menuTermino"
+                v-model="menuTerminoVisible"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
                   <v-text-field
-                    v-model="venta.precio"
-                    label="Precio"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
-                    @input="calcularTotal"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="6">
-                  <v-text-field
-                    v-model="venta.descripcion"
-                    label="Descripcion"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
-                  />
-                </v-col>
-              </v-row>
-
-              <!-- Tercera fila de campos -->
-              <v-row>
-                <v-col cols="12" sm="6" md="6">
-                  <v-select
-                    v-model="venta.cantidad"
-                    :items="cantidades"
-                    label="Cantidad"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
-                    @change="calcularTotal"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="6">
-                  <v-text-field
-                    :value="venta.total"
-                    label="Total (Automático)"
-                    outlined
-                    dense
-                    color="blue"
-                    class="rounded-field black-text-field"
-                    style="border-radius: 20px; -webkit-text-fill-color: #000000; background-color: #F0F0F0; height: 40px; margin-top: 20px; width: 100%;"
+                    v-model="terminoFecha"
+                    label="Término"
                     readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
                   />
-                </v-col>
-              </v-row>
+                </template>
+                <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
+              </v-menu>
+            </v-col>
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Fecha de Vencimiento
+              </h4>
+              <v-menu
+                ref="menuVencimiento"
+                v-model="menuVencimiento"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="fechaVencimiento"
+                    label="Fecha de Vencimiento"
+                    readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                  />
+                </template>
+                <v-date-picker
+                  v-model="fechaVencimiento"
+                  @input="menuVencimiento = false"
+                />
+              </v-menu>
+            </v-col>
+          </v-row>
 
-              <v-row v-if="errorMessage" class="error mt-3 text-center">
-                {{ errorMessage }}
-              </v-row>
-            </form>
-          </v-col>
-        </v-row>
+          <!-- Tabla de ítems -->
+          <v-divider />
+          <div class="mt-3">
+            <div class="table-header">
+              <div v-for="header in headers" :key="header.text" class="table-cell">
+                {{ header.text }}
+              </div>
+            </div>
+            <div
+              v-for="(fila, index) in filas"
+              :key="index"
+              class="table-row"
+            >
+              <v-select
+                v-model="fila.item"
+                :items="productos"
+                item-text="item"
+                item-value="id"
+                label="Producto"
+                dense
+                outlined
+                class="table-cell"
+                @change="actualizarPrecio(index)"
+              />
+              <div class="table-cell">
+                {{ fila.referencia }}
+              </div>
+              <div class="table-cell">
+                {{ fila.precio }}
+              </div>
+              <v-text-field
+                v-model="fila.descuento"
+                type="number"
+                dense
+                outlined
+                class="table-cell"
+                @input="calcularTotal(index)"
+              />
+              <v-text-field
+                v-model="fila.impuesto"
+                type="number"
+                dense
+                outlined
+                class="table-cell"
+                @input="calcularTotal(index)"
+              />
+              <div class="table-cell">
+                {{ fila.descripcion }}
+              </div>
+              <v-text-field
+                v-model="fila.cantidad"
+                type="number"
+                dense
+                outlined
+                class="table-cell"
+                @input="calcularTotal(index)"
+              />
+              <div class="table-cell">
+                {{ fila.total }}
+              </div>
+              <v-btn
+                icon
+                color="red"
+                class="table-cell"
+                @click="eliminarFila(index)"
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </div>
+            <v-btn
+              class="my-3"
+              color="blue"
+              outlined
+              @click="agregarFila"
+            >
+              Agregar nueva fila
+            </v-btn>
+          </div>
+
+          <div class="totales-container">
+            <v-row>
+              <v-col cols="12" sm="4" offset-sm="8">
+                <v-row>
+                  <v-col>
+                    <p><strong>Subtotal:</strong> {{ subtotal }}</p>
+                    <p><strong>Impuestos:</strong> {{ impuestos }}</p>
+                    <p><strong>Total:</strong> {{ total }}</p>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+          </div>
+
+          <!-- Totales -->
+          <v-divider />
+          <v-row>
+            <v-col cols="12" sm="4">
+              <h4 class="mr-2">
+                Términos y condiciones
+              </h4>
+              <v-textarea
+                v-model="terminos"
+                label="Términos y condiciones"
+                dense
+                outlined
+              />
+            </v-col>
+            <v-col cols="12" sm="4">
+              <h4 class="mr-2">
+                Notas
+              </h4>
+              <v-textarea v-model="notas" label="Notas" dense outlined />
+            </v-col>
+            <v-col cols="12" sm="4">
+              <h4 class="mr-2">
+                Texto de Resolución
+              </h4>
+              <v-textarea
+                v-model="textoResolucion"
+                label="Texto de Resolución"
+                dense
+                outlined
+              />
+            </v-col>
+          </v-row>
+
+          <!-- Botones -->
+          <v-divider />
+          <v-row>
+            <v-col cols="12" class="d-flex justify-space-between">
+              <v-btn outlined color="grey">
+                Cancelar
+              </v-btn>
+              <v-btn outlined color="grey">
+                Previsualizar
+              </v-btn>
+              <v-btn color="blue" @click="guardarCotizacion">
+                Enviar y agregar pago
+              </v-btn>
+              <v-menu>
+                <template #activator="{ on, attrs }">
+                  <v-btn color="blue" v-bind="attrs" v-on="on">
+                    Guardar
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item>
+                    <v-list-item-title>Guardar como borrador</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>Guardar y enviar por email</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </v-col>
+          </v-row>
+        </v-form>
       </v-card-text>
-      <v-card-actions class="d-flex flex-column align-center">
-        <!-- Botón para crear nueva venta -->
-        <v-btn color="#1B262C" class="mb-3" style="border-radius: 15px; width: 369px;" @click="registrarVenta">
-          <span style="text-transform: none; color: #FFFFFF;">
-            {{ inside && update ? 'Actualizar' : (inside ? 'Crear Nueva' : '') }}
-          </span>
-        </v-btn>
-
-        <!-- Botón para cancelar -->
-        <v-btn color="grey" class="mb-3" style="border-radius: 15px; width: 369px;" @click="cancelar">
-          <span style="text-transform: none; color: #FFFFFF;">
-            Cancelar
-          </span>
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-container>
 </template>
 
 <script>
 export default {
-  props: {
-    inside: { type: Boolean, default: false },
-    update: { type: Boolean, default: false },
-    ventaUpdate: { type: Object, default: null } // Datos del registro a editar
-  },
   data () {
     return {
-      venta: {
-        item: '',
-        ref: Math.floor(Math.random() * 1000), // Generar referencia por defecto
-        precio: '',
-        descripcion: '',
-        cantidad: null,
-        total: ''
-      },
-      errorMessage: '',
-      cantidades: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    }
-  },
-  watch: {
-    // Si se actualizan las propiedades externas, reiniciamos el formulario
-    ventaUpdate: {
-      immediate: true,
-      handler (newValue) {
-        if (newValue && this.update) {
-          this.venta = { ...newValue }
+      headers: [
+        { text: 'Producto' },
+        { text: 'Referencia' },
+        { text: 'Precio' },
+        { text: 'Descuento' },
+        { text: 'Impuesto' },
+        { text: 'Descripción' },
+        { text: 'Cantidad' },
+        { text: 'Total' },
+        { text: 'Acciones' }
+      ],
+      contactos: [], // Lista de contactos obtenida desde la API
+      productos: [], // Lista de productos obtenida desde la API
+      filas: [
+        {
+          item: null,
+          referencia: '',
+          precio: 0,
+          descuento: 0,
+          impuesto: 0,
+          descripcion: '',
+          cantidad: 1,
+          total: 0
         }
-      }
-    },
-    update: {
-      immediate: true,
-      handler (isUpdate) {
-        if (!isUpdate) {
-          this.limpiarFormulario()
-        }
-      }
+      ],
+      subtotal: 0,
+      impuestos: 0,
+      total: 0,
+      telefono: '',
+      contactoSeleccionado: null,
+      numeroNota: '',
+      fecha: '',
+      fechaVencimiento: '',
+      menuFecha: false,
+      menuVencimiento: false,
+      notas: ''
     }
   },
   mounted () {
-    this.inicializarFormulario()
+    this.getContactos()
+    this.getProductos()
   },
   methods: {
-    inicializarFormulario () {
-      if (this.update && this.ventaUpdate) {
-        // Cargar datos existentes para edición
-        this.venta = { ...this.ventaUpdate }
-      } else {
-        // Limpieza para nuevo registro
-        this.limpiarFormulario()
-      }
-    },
-    limpiarFormulario () {
-      this.venta = {
-        item: '',
-        ref: Math.floor(Math.random() * 1000), // Generar nueva referencia
-        precio: '',
-        descripcion: '',
-        cantidad: null,
-        total: ''
-      }
-      this.errorMessage = ''
-    },
-    calcularTotal () {
-      const precio = parseFloat(this.venta.precio) || 0
-      const cantidad = parseInt(this.venta.cantidad) || 0
-      this.venta.total = precio * cantidad
-    },
-    async registrarVenta () {
-      if (
-        !this.venta.item ||
-        !this.venta.ref ||
-        !this.venta.precio ||
-        !this.venta.descripcion ||
-        !this.venta.cantidad ||
-        !this.venta.total
-      ) {
-        this.errorMessage = 'Todos los campos son obligatorios.'
-        return
-      }
+    async getContactos () {
       try {
-        let response
-        if (this.update) {
-          // Actualizar registro existente
-          response = await this.$axios.put(
-            `/ventas/update/${this.venta.id}`,
-            this.venta
-          )
-        } else {
-          // Crear nuevo registro
-          response = await this.$axios.post('/ventas/create', this.venta)
-        }
-        if (response.data.success) {
-          this.$emit('guardado')
-          this.limpiarFormulario()
-        } else {
-          this.errorMessage = response.data.message || 'Error al guardar.'
+        const res = await this.$axios.get('/clientes')
+        if (res.data && res.data.success) {
+          this.contactos = res.data.clientes
         }
       } catch (error) {
-        this.errorMessage = 'Error en la comunicación con el servidor.'
-        console.error(error)
+        console.error('Error al obtener los contactos:', error)
       }
     },
-    cancelar () {
-      this.$emit('click-cancel')
-      this.limpiarFormulario()
+    async getProductos () {
+      try {
+        const res = await this.$axios.get('/inventarios')
+        if (res.data && res.data.success) {
+          this.productos = res.data.inventarios
+        }
+      } catch (error) {
+        console.error('Error al obtener los productos:', error)
+      }
+    },
+    agregarFila () {
+      this.filas.push({
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      })
+    },
+    eliminarFila (index) {
+      this.filas.splice(index, 1)
+      this.calcularTotales()
+    },
+    calcularTotal (index) {
+      const fila = this.filas[index]
+      const subtotal = fila.precio * fila.cantidad
+      const descuento = (fila.descuento / 100) * subtotal
+      const impuesto = (fila.impuesto / 100) * (subtotal - descuento)
+      fila.total = subtotal - descuento + impuesto
+      this.calcularTotales()
+    },
+    calcularTotales () {
+      this.subtotal = this.filas.reduce((sum, fila) => sum + fila.total, 0)
+      this.impuestos = this.filas.reduce((sum, fila) => sum + (fila.impuesto / 100) * (fila.precio * fila.cantidad), 0)
+      this.total = this.subtotal + this.impuestos
+    },
+    guardarCotizacion () {
+      console.log('Cotización guardada')
+    },
+    actualizarTelefono () {
+      const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
+      this.telefono = contacto ? contacto.telefono : ''
+    },
+    actualizarPrecio (index) {
+      const productoSeleccionado = this.filas[index].item
+      const producto = this.productos.find(prod => prod.id === productoSeleccionado)
+
+      if (producto) {
+        // Asignar los valores correctamente
+        this.filas[index].precio = producto.precio
+        this.filas[index].referencia = producto.ref // Asegúrate de que este campo sea correcto
+        this.filas[index].descripcion = producto.descripcion // Ahora se asigna la descripcion correctamente
+
+        // Ahora asignamos el nombre del producto al campo 'item', no el objeto completo
+
+        this.calcularTotal(index)
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-.login-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Estilo para el contenedor de la tabla */
+.table-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Encabezado de la tabla */
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr auto;
+  gap: 10px;
+  background-color: #3282B8;
+  color: white;
+  padding: 10px;
   border-radius: 15px;
+  font-weight: bold;
 }
 
-.title {
-  font-weight: bold;
-  font-size: 1.2rem;
+/* Filas de la tabla */
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 2fr 1fr 1fr auto;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
 }
 
-.error {
-  color: #ffffff; /* Rojo vibrante para mayor visibilidad */
-  font-weight: bold;
-  text-align: center;
+/* Botón de eliminar en la fila */
+.table-row .delete-button {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.table-row .delete-button:hover {
+  background-color: #d62828;
+}
+
+/* Alternar colores para filas pares e impares */
+.table-row:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table-row:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* Estilo de los inputs dentro de la tabla */
+.table-row input {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  width: 100%;
+}
+
+/* Botón agregar fila */
+.add-row-button {
+  background-color: #3282B8;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
   margin-top: 10px;
-  font-size: 16px;
+  transition: background-color 0.3s ease;
 }
 
-.rounded-field .v-input__control {
-  border-radius: 50px;
-}
-
-.black-text-field .v-input__control {
-  background-color: #F0F0F0 !important;
-}
-
-.black-text-field input {
-  color: black !important;
+.add-row-button:hover {
+  background-color: #205375;
 }
 </style>
