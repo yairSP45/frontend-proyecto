@@ -29,7 +29,7 @@
             {{ header.text }}
           </div>
         </div>
-        <div v-for="item in items" :key="item.id" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #ddd; color: black; border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2)">
+        <div v-for="item in items" :key="item.numeronota" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #ddd; color: black; border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2)">
           <div style="display: flex; text-align: center;">
             <div v-for="header in headers" :key="header.value" style="flex: 1;">
               <div v-if="header.text === 'Acciones'">
@@ -39,27 +39,28 @@
                       icon
                       color="#EBD50F"
                       v-bind="attrs"
-                      @click="update(item)"
+                      @click="updateCotizacion(item)"
                       v-on="on"
                     >
                       <v-icon>mdi-account-box-edit-outline</v-icon>
                     </v-btn>
                   </template>
-                  <span> Actualiza: {{ item.item }}</span>
+                  <span> Actualiza: {{ item.numeronota }}</span>
                 </v-tooltip>
+
                 <v-tooltip bottom color="red">
                   <template #activator="{ on, attrs }">
                     <v-btn
                       icon
                       color="#FF7657"
                       v-bind="attrs"
-                      @click="deleteVenta(item.id)"
+                      @click="deleteCotizacion(item.id)"
                       v-on="on"
                     >
                       <v-icon>mdi-delete</v-icon>
                     </v-btn>
                   </template>
-                  <span> Borra: {{ item.item }}</span>
+                  <span> Borra: {{ item.numeronota }}</span>
                 </v-tooltip>
               </div>
               <div v-else>
@@ -103,14 +104,24 @@
     <v-dialog v-model="dialogCreate" width="1000" persistent>
       <crearVenta :inside="true" @click-cancel="dialogCreate = false" @guardado="ventasGuardado" />
     </v-dialog>
-    <v-dialog v-model="dialogUpdate" width="600" persistent>
+    <v-dialog v-model="dialogUpdate" width="1000" persistent>
       <crearVenta :inside="true" :update="true" :venta-update="ventaActualizar" @click-cancel="dialogUpdate = false" @guardado="ventasGuardado" />
     </v-dialog>
-    <v-dialog v-model="dialogCreateCotizacion" width="1400" persistent>
-      <crear-cotizacion :inside="true" @click-cancel="dialogCreateCotizacion = false" />
+    <v-dialog v-model="dialogCreateCotizacion" width="1000" persistent>
+      <crear-cotizacion
+        :inside="true"
+        @click-cancel="dialogCreateCotizacion = false"
+        @guardado="cotizacionGuardada"
+      />
     </v-dialog>
-    <v-dialog v-model="dialogUpdateCotizacion" width="600" persistent>
-      <crear-cotizacion :inside="true" :update="true" :cotizacion-update="cotizacionActualizar" @click-cancel="dialogUpdateCotizacion = false" />
+    <v-dialog v-model="dialogUpdateCotizacion" width="1000" persistent>
+      <crear-cotizacion
+        :inside="true"
+        :update="true"
+        :cotizacion-editada="cotizacionActualizar"
+        @click-cancel="dialogUpdateCotizacion = false"
+        @guardado="cotizacionGuardada"
+      />
     </v-dialog>
     <v-dialog v-model="dialogCreateFacturaRecurrente" width="1200" persistent>
       <crear-factura-recurrente :inside="true" @click-cancel="dialogCreateFacturaRecurrente = false" />
@@ -145,12 +156,14 @@ export default {
       dialogCreateFacturaRecurrente: false,
       dialogBorrar: false,
       ventaActualizar: {},
-      cotizacionActualizar: {}
+      cotizacionActualizar: {},
+      clientes: {}
     }
   },
   mounted () {
     this.navigateTo()
     this.getData()
+    this.getClientes()
   },
   methods: {
     navigateTo () {
@@ -170,7 +183,7 @@ export default {
         this.getData()
       } else if (option === 'Cotización') {
         this.headers = [
-          { text: 'Número', value: 'numero' },
+          { text: 'Número de nota', value: 'numeronota' },
           { text: 'Cliente', value: 'cliente' },
           { text: 'Creación', value: 'creacion' },
           { text: 'Vencimiento', value: 'vencimiento' },
@@ -206,6 +219,19 @@ export default {
       }
       return '/ventas' // Ruta por defecto si no coincide ninguna
     },
+    async getClientes () {
+      try {
+        const res = await this.$axios.get('/clientes')
+        if (res && res.data && res.data.success) {
+          this.clientes = res.data.clientes.reduce((map, cliente) => {
+            map[cliente.id] = cliente.nombre // Asumiendo { id, nombre } en cada cliente
+            return map
+          }, {})
+        }
+      } catch (error) {
+        console.error('Error al cargar clientes:', error)
+      }
+    },
     // Reutiliza esta función para todas las categorías
     async getData () {
       const endpoint = this.getApiEndpoint()
@@ -216,7 +242,10 @@ export default {
           if (this.selectedOption === 'Ventas') {
             this.items = res.data.ventas || [] // Limpia y asigna las ventas
           } else if (this.selectedOption === 'Cotización') {
-            this.items = res.data.cotizacion || [] // Limpia y asigna las cotizaciones
+            // Modificación aquí: Mapea las cotizaciones correctamente
+            this.items = res.data.cotizaciones || []
+            // Puedes agregar más transformaciones si lo necesitas
+            // Limpia y asigna las cotizaciones
           } else if (this.selectedOption === 'Facturas Recurrentes') {
             this.items = res.data.facturas || [] // Limpia y asigna las facturas
           }
@@ -250,18 +279,16 @@ export default {
         this.dialogCreateFacturaRecurrente = true
       }
     },
-    update (item) {
+    update (items) {
       const option = this.selectedOption
       if (option === 'Ventas') {
-        this.pageTitle = `Actualizando Venta: ${item.item}`
-        this.ventaActualizar = item
+        this.ventaActualizar = items
         this.dialogUpdate = true
       } else if (option === 'Cotización') {
-        this.pageTitle = `Actualizando Cotización: ${item.item}`
-        this.cotizacionActualizar = item
+        this.cotizacionActualizar = items
         this.dialogUpdateCotizacion = true
       } else if (option === 'Facturas Recurrentes') {
-        console.log('Actualizar Factura Recurrente:', item)
+        console.log('Actualizar Factura Recurrente:', items)
       }
     },
     ventasGuardado () {
@@ -272,7 +299,50 @@ export default {
     deleteVenta (id) {
       this.idBorrar = id
       this.dialogBorrar = true
+    },
+    cotizacionGuardada () {
+      this.getData()
+      this.dialogCreateCotizacion = false
+      this.dialogUpdateCotizacion = false
+    },
+    updateCotizacion (item) {
+      this.cotizacionActualizar = item // Asignar la cotización seleccionada
+      this.contactoSeleccionado = item.contacto // Asignar el contacto
+      this.telefono = item.telefono // Asignar el teléfono
+      this.numeroNota = item.numero_nota // Asignar el número de la nota
+      this.fecha = item.fecha // Asignar la fecha
+      this.fechaVencimiento = item.fecha_vencimiento // Asignar la fecha de vencimiento
+      this.filas = item.items // Asignar las filas de la tabla (productos)
+      this.notas = item.notas // Asignar las notas
+
+      this.dialogUpdateCotizacion = true // Abrir el modal de edición
+    },
+
+    deleteCotizacion (id) {
+      this.idBorrar = id
+      this.dialogBorrar = true // Abre el modal de confirmación de borrado
+    },
+    // Función para actualizar el teléfono cuando se cambia el contacto
+    actualizarTelefono () {
+      const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
+      if (contacto) {
+        this.telefono = contacto.telefono
+      }
+    },
+    async getInventarios () {
+      try {
+        const res = await this.$axios.get('/inventarios')
+        if (res && res.data && res.data.success) {
+          this.inventarios = res.data.inventarios || [] // Asignar los inventarios, o un array vacío si no hay inventarios
+        } else {
+          this.inventarios = [] // En caso de que no haya éxito, aseguramos que el array esté vacío
+        }
+      } catch (error) {
+        console.error('Error al obtener inventarios:', error)
+        this.inventarios = [] // Aseguramos que se limpie en caso de error
+      } // Esto te ayudará a revisar la respuesta en la consola
     }
+
   }
 
 }
