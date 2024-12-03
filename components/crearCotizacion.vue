@@ -4,11 +4,10 @@
       <v-card-title>
         <div class="d-flex justify-space-between align-center">
           <h1 class="title">
-            NUEVA COTIZACIÓN
+            {{ inside && update ? 'Actualiza el Contacto' : (inside ? 'Registra un Nuevo Contacto' : '') }}
           </h1>
         </div>
       </v-card-title>
-
       <v-card-text>
         <v-form @submit.prevent="guardarCotizacion">
           <!-- Información general -->
@@ -53,6 +52,7 @@
                 outlined
                 dense
                 required
+                :disabled="isEditMode"
               />
             </v-col>
           </v-row>
@@ -196,18 +196,6 @@
             </v-col>
           </v-row>
 
-          <!-- Firma -->
-          <!--  <v-row>
-            <v-col cols="12" class="text-center">
-              <h4 class="mb-2">
-                Firma
-              </h4>
-              <v-btn outlined color="blue">
-                Usar Firma
-              </v-btn>
-            </v-col>
-          </v-row> -->
-
           <!-- Notas -->
           <v-row>
             <v-col cols="12" class="d-flex align-center">
@@ -221,11 +209,11 @@
           <!-- Botones -->
           <v-row>
             <v-col cols="12" class="d-flex justify-space-between">
-              <v-btn outlined color="grey">
+              <v-btn outlined color="grey" @click="cancelar">
                 Cancelar
               </v-btn>
               <v-btn color="blue" @click="guardarCotizacion">
-                Guardar
+                {{ inside && update ? 'Actualizar' : (inside ? 'Crear' : '') }}
               </v-btn>
             </v-col>
           </v-row>
@@ -237,6 +225,11 @@
 
 <script>
 export default {
+  props: {
+    inside: { type: Boolean, default: false },
+    update: { type: Boolean, default: false },
+    cotizacionEditada: { type: Object, default: null } // Nueva propiedad para la cotización a editar
+  },
   data () {
     return {
       headers: [
@@ -279,7 +272,12 @@ export default {
   },
   mounted () {
     this.getContactos()
-    this.getProductos()
+      .then(() => this.getProductos())
+      .then(() => {
+        if (this.update && this.cotizacionEditada) {
+          this.cargarCotizacion(this.cotizacionEditada)
+        }
+      })
   },
   methods: {
     async getContactos () {
@@ -301,6 +299,59 @@ export default {
       } catch (error) {
         console.error('Error al obtener los productos:', error)
       }
+    },
+    cargarCotizacion (cotizacion) {
+      console.log('Cotización recibida:', cotizacion)
+
+      // Asignar cliente seleccionado
+      const contacto = this.contactos.find(c => c.nombre.trim() === cotizacion.cliente.trim())
+
+      if (contacto) {
+        this.contactoSeleccionado = contacto.id
+        this.telefono = contacto.telefono
+      } else {
+        console.error('Cliente no encontrado:', cotizacion.cliente)
+        this.contactoSeleccionado = null
+        this.telefono = ''
+      }
+
+      // Asignar datos básicos
+      this.numeroNota = cotizacion.numeronota || ''
+      this.fecha = cotizacion.creacion || ''
+      this.fechaVencimiento = cotizacion.vencimiento || ''
+      this.notas = cotizacion.notas || ''
+
+      // Asignar productos a las filas
+      this.filas = cotizacion.producto.map((producto) => {
+        const prod = this.productos.find(p => p.item.trim() === producto.nombreproducto.trim())
+        if (prod) {
+          return {
+            item: prod.id,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+        } else {
+          console.error('Producto no encontrado:', producto.nombreproducto)
+          return {
+            item: null,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+        }
+      })
+
+      // Recalcular totales
+      this.calcularTotales()
     },
     agregarFila () {
       this.filas.push({
@@ -325,10 +376,8 @@ export default {
       if (producto) {
         // Asignar los valores correctamente
         this.filas[index].precio = producto.precio
-        this.filas[index].referencia = producto.ref // Asegúrate de que este campo sea correcto
-        this.filas[index].descripcion = producto.descripcion // Ahora se asigna la descripcion correctamente
-
-        // Ahora asignamos el nombre del producto al campo 'item', no el objeto completo
+        this.filas[index].referencia = producto.ref
+        this.filas[index].descripcion = producto.descripcion
 
         this.calcularTotal(index)
       }
@@ -346,20 +395,106 @@ export default {
       this.impuestos = this.filas.reduce((sum, fila) => sum + (fila.impuesto / 100) * (fila.precio * fila.cantidad), 0)
       this.total = this.subtotal + this.impuestos
     },
+
     guardarCotizacion () {
-      console.log('Cotización guardada')
+      const productos = this.filas.map((fila) => {
+        const producto = this.productos.find(prod => prod.id === fila.item)
+        return {
+          nombreproducto: producto?.item || '',
+          referencia: fila.referencia || '',
+          precio: parseFloat(fila.precio) || 0,
+          descuento: parseFloat(fila.descuento) || 0,
+          impuesto: parseFloat(fila.impuesto) || 0,
+          descripcion: fila.descripcion || '',
+          cantidad: parseInt(fila.cantidad) || 0,
+          total: parseFloat(fila.total) || 0
+        }
+      })
+
+      const productosValidos = productos.every(p =>
+        p.nombreproducto &&
+    p.referencia &&
+    p.precio >= 0 &&
+    p.cantidad > 0 &&
+    p.total >= 0
+      )
+
+      if (!productosValidos) {
+        alert('Hay errores en los datos de los productos. Por favor, verifica.')
+        return
+      }
+
+      const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
+
+      const cotizacionData = {
+        cliente: contacto.nombre,
+        numero: contacto.telefono,
+        numeronota: this.numeroNota,
+        creacion: this.fecha,
+        vencimiento: this.fechaVencimiento,
+        producto: productos,
+        total: this.total,
+        notas: this.notas
+      }
+
+      if (this.update) {
+        // Si estamos en modo edición, actualiza la cotización
+        this.$axios.put(`/cotizaciones/update/${this.cotizacionEditada.id}`, cotizacionData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al actualizar la cotización', error)
+          })
+      } else {
+        // Si estamos creando una cotización nueva
+        this.$axios.post('/cotizaciones/create', cotizacionData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al guardar la cotización', error)
+          })
+      }
+    },
+
+    limpiarFormulario () {
+      this.contactoSeleccionado = null
+      this.numeroNota = ''
+      this.fecha = ''
+      this.fechaVencimiento = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
+      this.subtotal = 0
+      this.impuestos = 0
+      this.total = 0
+      this.notas = ''
     },
     actualizarTelefono () {
       const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
       this.telefono = contacto ? contacto.telefono : ''
+    },
+    cancelar () {
+      this.$emit('click-cancel')
     }
   }
 }
 </script>
-
-<style scoped>
-.quote-container {
-  max-width: 1400px;
-  margin: 0 auto;
-}
-</style>
