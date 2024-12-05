@@ -4,7 +4,7 @@
       <v-card-title>
         <div class="d-flex justify-space-between align-center">
           <h1 class="title">
-            {{ inside && update ? 'Actualiza el Contacto' : (inside ? 'Registra un Nuevo Contacto' : '') }}
+            {{ inside && update ? 'Actualiza Cotización' : (inside ? 'Registra una Nueva Factura' : '') }}
           </h1>
         </div>
       </v-card-title>
@@ -52,7 +52,6 @@
                 outlined
                 dense
                 required
-                :disabled="isEditMode"
               />
             </v-col>
           </v-row>
@@ -270,6 +269,13 @@ export default {
       notas: ''
     }
   },
+  watch: {
+    cotizacionEditada (newValue) {
+      if (newValue) {
+        this.cargarCotizacion(newValue)
+      }
+    }
+  },
   mounted () {
     this.getContactos()
       .then(() => this.getProductos())
@@ -301,27 +307,35 @@ export default {
       }
     },
     cargarCotizacion (cotizacion) {
-      console.log('Cotización recibida:', cotizacion)
+      // Reseteo de algunos valores internos (como filas o contacto)
+      this.contactoSeleccionado = null
+      this.telefono = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
 
-      // Asignar cliente seleccionado
+      // Ahora, cargar la cotización como lo haces normalmente
       const contacto = this.contactos.find(c => c.nombre.trim() === cotizacion.cliente.trim())
 
       if (contacto) {
         this.contactoSeleccionado = contacto.id
         this.telefono = contacto.telefono
-      } else {
-        console.error('Cliente no encontrado:', cotizacion.cliente)
-        this.contactoSeleccionado = null
-        this.telefono = ''
       }
 
-      // Asignar datos básicos
+      // Otros datos del formulario
       this.numeroNota = cotizacion.numeronota || ''
       this.fecha = cotizacion.creacion || ''
       this.fechaVencimiento = cotizacion.vencimiento || ''
       this.notas = cotizacion.notas || ''
 
-      // Asignar productos a las filas
+      // Productos
       this.filas = cotizacion.producto.map((producto) => {
         const prod = this.productos.find(p => p.item.trim() === producto.nombreproducto.trim())
         if (prod) {
@@ -335,22 +349,18 @@ export default {
             cantidad: producto.cantidad || 1,
             total: producto.total || 0
           }
-        } else {
-          console.error('Producto no encontrado:', producto.nombreproducto)
-          return {
-            item: null,
-            referencia: producto.referencia || '',
-            precio: producto.precio || 0,
-            descuento: producto.descuento || 0,
-            impuesto: producto.impuesto || 0,
-            descripcion: producto.descripcion || '',
-            cantidad: producto.cantidad || 1,
-            total: producto.total || 0
-          }
+        }
+        return {
+          item: null,
+          referencia: producto.referencia || '',
+          precio: producto.precio || 0,
+          descuento: producto.descuento || 0,
+          impuesto: producto.impuesto || 0,
+          descripcion: producto.descripcion || '',
+          cantidad: producto.cantidad || 1,
+          total: producto.total || 0
         }
       })
-
-      // Recalcular totales
       this.calcularTotales()
     },
     agregarFila () {
@@ -470,6 +480,7 @@ export default {
 
     limpiarFormulario () {
       this.contactoSeleccionado = null
+      this.telefono = ''
       this.numeroNota = ''
       this.fecha = ''
       this.fechaVencimiento = ''
@@ -493,6 +504,7 @@ export default {
       this.telefono = contacto ? contacto.telefono : ''
     },
     cancelar () {
+      this.limpiarFormulario()
       this.$emit('click-cancel')
     }
   }

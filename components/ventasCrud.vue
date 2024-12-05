@@ -29,7 +29,7 @@
             {{ header.text }}
           </div>
         </div>
-        <div v-for="item in items" :key="item.numeronota" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #ddd; color: black; border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2)">
+        <div v-for="item in items" :key="item.id" style="margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #ddd; color: black; border-radius: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2)">
           <div style="display: flex; text-align: center;">
             <div v-for="header in headers" :key="header.value" style="flex: 1;">
               <div v-if="header.text === 'Acciones'">
@@ -39,7 +39,7 @@
                       icon
                       color="#EBD50F"
                       v-bind="attrs"
-                      @click="updateCotizacion(item)"
+                      @click="update(item)"
                       v-on="on"
                     >
                       <v-icon>mdi-account-box-edit-outline</v-icon>
@@ -101,11 +101,18 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogCreate" width="1000" persistent>
-      <crearVenta :inside="true" @click-cancel="dialogCreate = false" @guardado="ventasGuardado" />
+    <v-dialog v-model="dialogCreateVentas" width="1000" persistent>
+      <crearVenta :inside="true" @click-cancel="dialogCreateVentas = false" @guardado="ventasGuardado" />
     </v-dialog>
-    <v-dialog v-model="dialogUpdate" width="1000" persistent>
-      <crearVenta :inside="true" :update="true" :venta-update="ventaActualizar" @click-cancel="dialogUpdate = false" @guardado="ventasGuardado" />
+
+    <v-dialog v-model="dialogUpdateVentas" width="1000" persistent>
+      <crearVenta
+        :inside="true"
+        :update="true"
+        :venta-update="ventaActualizar"
+        @click-cancel="dialogUpdateVentas = false"
+        @guardado="ventasGuardado"
+      />
     </v-dialog>
     <v-dialog v-model="dialogCreateCotizacion" width="1000" persistent>
       <crear-cotizacion
@@ -149,9 +156,9 @@ export default {
       headers: [],
       buttonText: 'Nueva Venta',
       idBorrar: null,
-      dialogCreate: false,
+      dialogCreateVentas: false,
       dialogCreateCotizacion: false,
-      dialogUpdate: false,
+      dialogUpdateVentas: false,
       dialogUpdateCotizacion: false,
       dialogCreateFacturaRecurrente: false,
       dialogBorrar: false,
@@ -205,7 +212,6 @@ export default {
         ]
         this.buttonText = 'Nueva Factura'
         this.pageTitle = 'Facturas Recurrentes'
-        this.getData()
       }
     },
     // Función para obtener la ruta dinámica
@@ -270,8 +276,11 @@ export default {
       }
     },
     crear () {
+      this.dialogCreateVentas = false
+      this.dialogCreateCotizacion = false
+      this.dialogCreateFacturaRecurrente = false
       if (this.selectedOption === 'Ventas') {
-        this.dialogCreate = true
+        this.dialogCreateVentas = true
       } else if (this.selectedOption === 'Cotización') {
         this.dialogCreateCotizacion = true
       } else if (this.selectedOption === 'Facturas Recurrentes') {
@@ -279,22 +288,24 @@ export default {
         this.dialogCreateFacturaRecurrente = true
       }
     },
-    update (items) {
+    update (item) {
+      this.dialogUpdateVentas = false
+      this.dialogUpdateCotizacion = false
       const option = this.selectedOption
       if (option === 'Ventas') {
-        this.ventaActualizar = items
-        this.dialogUpdate = true
+        this.ventaActualizar = item
+        this.dialogUpdateVentas = true
+        this.dialogUpdateCotizacion = false
       } else if (option === 'Cotización') {
-        this.cotizacionActualizar = items
-        this.dialogUpdateCotizacion = true
+        this.updateCotizacion(item)
       } else if (option === 'Facturas Recurrentes') {
-        console.log('Actualizar Factura Recurrente:', items)
+        console.log('Actualizar Factura Recurrente:', item)
       }
     },
     ventasGuardado () {
       this.getData()
-      this.dialogCreate = false
-      this.dialogUpdate = false
+      this.dialogCreateVentas = false
+      this.dialogUpdateVentas = false
     },
     deleteVenta (id) {
       this.idBorrar = id
@@ -305,17 +316,21 @@ export default {
       this.dialogCreateCotizacion = false
       this.dialogUpdateCotizacion = false
     },
-    updateCotizacion (item) {
-      this.cotizacionActualizar = item // Asignar la cotización seleccionada
-      this.contactoSeleccionado = item.contacto // Asignar el contacto
-      this.telefono = item.telefono // Asignar el teléfono
-      this.numeroNota = item.numero_nota // Asignar el número de la nota
-      this.fecha = item.fecha // Asignar la fecha
-      this.fechaVencimiento = item.fecha_vencimiento // Asignar la fecha de vencimiento
-      this.filas = item.items // Asignar las filas de la tabla (productos)
-      this.notas = item.notas // Asignar las notas
+    updateCotizacion (items) {
+      if (items) {
+        this.cotizacionActualizar = items // Asignar la cotización seleccionada
+        this.contactoSeleccionado = items.contacto || '' // Asignar el contacto, si existe
+        this.telefono = items.telefono || '' // Asignar el teléfono, si existe
+        this.numeroNota = items.numero_nota || '' // Asignar el número de la nota, si existe
+        this.fecha = items.fecha || '' // Asignar la fecha, si existe
+        this.fechaVencimiento = items.fecha_vencimiento || '' // Asignar la fecha de vencimiento, si existe
+        this.filas = items.items || [] // Asignar las filas de la tabla (productos), si existen
+        this.notas = items.notas || '' // Asignar las notas, si existen
 
-      this.dialogUpdateCotizacion = true // Abrir el modal de edición
+        this.dialogUpdateCotizacion = true // Abrir el modal de edición
+      } else {
+        console.error('No se proporcionaron datos válidos para la cotización')
+      }
     },
 
     deleteCotizacion (id) {
