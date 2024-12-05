@@ -1,14 +1,15 @@
 <template>
   <v-container class="quote-container" width="1000">
     <v-card flat elevation="0" color="#FFFFFF">
-      <div class="d-flex justify-space-between align-center" style="margin: 20px;">
+      <v-card-title>
+      <div class="d-flex justify-space-between align-center">
         <h1 class="title">
-          NUEVA FACTURA
+          {{ inside && update ? 'Actualiza la Factura' : (inside ? 'Registra Nueva Factura' : '') }}
         </h1>
       </div>
-
+    </v-card-title>
       <v-card-text>
-        <v-form @submit.prevent="guardarCotizacion">
+        <v-form @submit.prevent="guardarVenta">
           <!-- Información general -->
           <v-row>
             <v-col cols="12" sm="4" class="d-flex align-center">
@@ -73,20 +74,21 @@
 
           <!-- Fechas -->
           <v-row>
+
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
                 Fecha
               </h4>
               <v-menu
                 ref="menuFecha"
-                v-model="menuFecha"
+                v-model="menuInicioFecha"
                 :close-on-content-click="false"
                 transition="scale-transition"
                 offset-y
               >
                 <template #activator="{ on, attrs }">
                   <v-text-field
-                    v-model="fecha"
+                    v-model="inicioFecha"
                     label="Fecha"
                     readonly
                     dense
@@ -95,9 +97,10 @@
                     v-on="on"
                   />
                 </template>
-                <v-date-picker v-model="fecha" @input="menuFecha = false" />
-              </v-menu>
+                <v-date-picker v-model="inicioFecha" @input="menuInicioFecha = false" />
+              </v-menu>        
             </v-col>
+
             <v-col cols="12" sm="3" class="d-flex align-center">
               <h4 class="mr-2">
                 Término
@@ -123,6 +126,7 @@
                 <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
               </v-menu>
             </v-col>
+
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
                 Fecha de Vencimiento
@@ -151,6 +155,7 @@
                 />
               </v-menu>
             </v-col>
+
           </v-row>
 
           <!-- Tabla de ítems -->
@@ -283,14 +288,14 @@
           <v-divider />
           <v-row>
             <v-col cols="12" class="d-flex justify-space-between">
-              <v-btn outlined color="grey">
+              <v-btn outlined color="grey" @click="cancelar">
                 Cancelar
               </v-btn>
               <v-btn outlined color="grey">
                 Previsualizar
               </v-btn>
-              <v-btn color="blue" @click="guardarCotizacion">
-                Enviar y agregar pago
+              <v-btn color="blue" @click="guardarVenta">
+                {{ inside && update ? 'Actualizar' : (inside ? 'Enviar y agregar pago' : '') }}
               </v-btn>
               <v-menu>
                 <template #activator="{ on, attrs }">
@@ -317,6 +322,11 @@
 
 <script>
 export default {
+  props: {
+    inside: { type: Boolean, default: false },
+    update: { type: Boolean, default: false },
+    ventaEditada: { type: Object, default: null } // Nueva propiedad para la factura a editar
+  },
   data () {
     return {
       headers: [
@@ -350,16 +360,30 @@ export default {
       telefono: '',
       contactoSeleccionado: null,
       numeroNota: '',
-      fecha: '',
+      inicioFecha: '',
+      terminoFecha: '',
       fechaVencimiento: '',
-      menuFecha: false,
+      menuInicioFecha: false,
+      menuTerminoVisible: false,
       menuVencimiento: false,
       notas: ''
     }
   },
+  watch: {
+    ventaEditada(newValue) {
+      if (newValue) {
+        this.cargarVenta(newValue)
+      }
+    }
+  },
   mounted () {
     this.getContactos()
-    this.getProductos()
+      .then(() => this.getProductos())
+      .then(() => {
+        if (this.update && this.ventaEditada) {
+          this.cargarVenta(this.ventaEditada)
+        }
+      })
   },
   methods: {
     async getContactos () {
@@ -382,6 +406,68 @@ export default {
         console.error('Error al obtener los productos:', error)
       }
     },
+    cargarVenta (venta) {
+
+      this.contactoSeleccionado = null
+      this.telefono = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
+
+      const contacto = this.contactos.find(c => c.nombre.trim() === venta.cliente.trim())
+
+      if (contacto) {
+        this.contactoSeleccionado = contacto.id
+        this.telefono = contacto.telefono
+      } 
+
+      // Asignar datos básicos
+      this.numeroNota = venta.nonota || ''
+      this.tipoPago = venta.tipopago || ''
+      this.inicioFecha = venta.fechainicio || ''
+      this.terminoFecha = venta.fechatermino || ''
+      this.fechaVencimiento = venta.fechavencimiento || ''
+      this.terminos = venta.terminos || ''
+      this.notas = venta.notas || ''
+      this.textoResolucion = venta.resolucion || ''
+
+      // Asignar productos a las filas
+      this.filas = venta.producto.map((producto) => {
+        const prod = this.productos.find(p => p.item.trim() === producto.nombreproducto.trim())
+        if (prod) {
+          return {
+            item: prod.id,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+        } 
+          return {
+            item: null,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+      })
+
+      // Recalcular totales
+      this.calcularTotales()
+    },
     agregarFila () {
       this.filas.push({
         item: null,
@@ -398,6 +484,20 @@ export default {
       this.filas.splice(index, 1)
       this.calcularTotales()
     },
+    actualizarPrecio (index) {
+      const productoSeleccionado = this.filas[index].item
+      const producto = this.productos.find(prod => prod.id === productoSeleccionado)
+
+      if (producto) {
+        // Asignar los valores correctamente
+        this.filas[index].precio = producto.precio
+        this.filas[index].referencia = producto.ref // Asegúrate de que este campo sea correcto
+        this.filas[index].descripcion = producto.descripcion // Ahora se asigna la descripcion correctamente
+
+        // Ahora asignamos el nombre del producto al campo 'item', no el objeto completo
+        this.calcularTotal(index)
+      }
+    },
     calcularTotal (index) {
       const fila = this.filas[index]
       const subtotal = fila.precio * fila.cantidad
@@ -411,28 +511,113 @@ export default {
       this.impuestos = this.filas.reduce((sum, fila) => sum + (fila.impuesto / 100) * (fila.precio * fila.cantidad), 0)
       this.total = this.subtotal + this.impuestos
     },
-    guardarCotizacion () {
-      console.log('Cotización guardada')
+    guardarVenta () {
+      const productos = this.filas.map((fila) => {
+        const producto = this.productos.find(prod => prod.id === fila.item)
+        return {
+          nombreproducto: producto?.item || '',
+          referencia: fila.referencia || '',
+          precio: parseFloat(fila.precio) || 0,
+          descuento: parseFloat(fila.descuento) || 0,
+          impuesto: parseFloat(fila.impuesto) || 0,
+          descripcion: fila.descripcion || '',
+          cantidad: parseInt(fila.cantidad) || 0,
+          total: parseFloat(fila.total) || 0
+        }
+      })
+
+      const productosValidos = productos.every(p =>
+    p.nombreproducto &&
+    p.referencia &&
+    p.precio >= 0 &&
+    p.cantidad > 0 &&
+    p.total >= 0
+      )
+
+      if (!productosValidos) {
+        alert('Hay errores en los datos de los productos. Por favor, verifica.')
+        return
+      }
+
+      const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
+
+      const ventaData = {
+        nonota: this.numeroNota,
+        cliente: contacto.nombre,
+        telefono: contacto.telefono,
+        tipopago: this.tipoPago,
+        fechainicio: this.inicioFecha,  
+        fechatermino: this.terminoFecha,
+        fechavencimiento: this.fechaVencimiento,
+        producto: productos,
+        terminos: this.terminos,
+        notas: this.notas,
+        resolucion: this.textoResolucion,
+        total: this.total
+      }
+
+      if (this.update) {
+        // Si estamos en modo edición, actualiza la cotización
+        this.$axios.put(`/ventas/update/${this.ventaEditada.id}`, ventaData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al actualizar la factura', error)
+          })
+      } else {
+        // Si estamos creando una factura nueva
+        this.$axios.post('/ventas/create', ventaData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al guardar la factura', error)
+          })
+      }
+    },
+    limpiarFormulario () {
+      this.contactoSeleccionado = null
+      this.numeroNota = ''
+      this.tipoPago = ''
+      this.inicioFecha = ''
+      this.terminoFecha = ''
+      this.fechaVencimiento = ''
+      this.terminos = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
+      this.subtotal = 0
+      this.impuestos = 0
+      this.total = 0
+      this.textoResolucion = ''
+      this.notas = ''
     },
     actualizarTelefono () {
       const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
       this.telefono = contacto ? contacto.telefono : ''
     },
-    actualizarPrecio (index) {
-      const productoSeleccionado = this.filas[index].item
-      const producto = this.productos.find(prod => prod.id === productoSeleccionado)
-
-      if (producto) {
-        // Asignar los valores correctamente
-        this.filas[index].precio = producto.precio
-        this.filas[index].referencia = producto.ref // Asegúrate de que este campo sea correcto
-        this.filas[index].descripcion = producto.descripcion // Ahora se asigna la descripcion correctamente
-
-        // Ahora asignamos el nombre del producto al campo 'item', no el objeto completo
-
-        this.calcularTotal(index)
-      }
+    cancelar () {
+      this.$emit('click-cancel')
     }
+
   }
 }
 </script>

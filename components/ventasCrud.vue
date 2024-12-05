@@ -101,69 +101,64 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
     <v-dialog v-model="dialogCreateVentas" width="1000" persistent>
       <crearVenta :inside="true" @click-cancel="dialogCreateVentas = false" @guardado="ventasGuardado" />
     </v-dialog>
-
     <v-dialog v-model="dialogUpdateVentas" width="1000" persistent>
-      <crearVenta
-        :inside="true"
-        :update="true"
-        :venta-update="ventaActualizar"
-        @click-cancel="dialogUpdateVentas = false"
-        @guardado="ventasGuardado"
-      />
+      <crearVenta :inside="true" :update="true" :venta-editada="ventaActualizar" 
+      @click-cancel="dialogUpdateVentas = false" @guardado="ventasGuardado" />
     </v-dialog>
+
     <v-dialog v-model="dialogCreateCotizacion" width="1000" persistent>
-      <crear-cotizacion
-        :inside="true"
-        @click-cancel="dialogCreateCotizacion = false"
-        @guardado="cotizacionGuardada"
-      />
+      <crear-cotizacion :inside="true" @click-cancel="dialogCreateCotizacion = false" @guardado="cotizacionGuardada" />
     </v-dialog>
     <v-dialog v-model="dialogUpdateCotizacion" width="1000" persistent>
-      <crear-cotizacion
-        :inside="true"
-        :update="true"
-        :cotizacion-editada="cotizacionActualizar"
-        @click-cancel="dialogUpdateCotizacion = false"
-        @guardado="cotizacionGuardada"
-      />
+      <crear-cotizacion :inside="true" :update="true" :cotizacion-editada="cotizacionActualizar" 
+      @click-cancel="dialogUpdateCotizacion = false" @guardado="cotizacionGuardada" />
     </v-dialog>
+
     <v-dialog v-model="dialogCreateFacturaRecurrente" width="1200" persistent>
-      <crear-factura-recurrente :inside="true" @click-cancel="dialogCreateFacturaRecurrente = false" />
+      <crear-factura-recurrente :inside="true" @click-cancel="dialogCreateFacturaRecurrente = false" @guardado="facturaGuardado"/>
     </v-dialog>
+    <v-dialog v-model="dialogUpdateFacturaRecurrente" width="1000" persistent>
+      <crear-factura-recurrente :inside="true" :update="true" :factura-editada="facturaActualizar" 
+      @click-cancel="dialogUpdateFacturaRecurrente = false" @guardado="facturaGuardado" />
+    </v-dialog>
+
   </div>
 </template>
 
 <script>
-import crearVenta from './crearVenta.vue'
+import crearFactura from './crearVenta.vue'
 import CrearCotizacion from './crearCotizacion.vue'
 import CrearFacturaRecurrente from './crearFacturaRecurrente.vue'
 
 export default {
   components: {
-    crearVenta,
+    crearFactura,
     CrearCotizacion,
     CrearFacturaRecurrente
   },
   data () {
     return {
-      pageTitle: 'Ventas',
-      options: ['Ventas', 'Facturas Recurrentes', 'Cotización'],
-      selectedOption: 'Ventas',
+      pageTitle: 'Facturas',
+      options: ['Facturas', 'Facturas Recurrentes', 'Cotización'],
+      selectedOption: 'Facturas',
       items: [],
       headers: [],
-      buttonText: 'Nueva Venta',
+      buttonText: 'Nueva Factura',
       idBorrar: null,
       dialogCreateVentas: false,
       dialogCreateCotizacion: false,
       dialogUpdateVentas: false,
       dialogUpdateCotizacion: false,
       dialogCreateFacturaRecurrente: false,
+      dialogUpdateFacturaRecurrente: false,
       dialogBorrar: false,
       ventaActualizar: {},
       cotizacionActualizar: {},
+      facturaActualizar: {},
       clientes: {}
     }
   },
@@ -175,18 +170,16 @@ export default {
   methods: {
     navigateTo () {
       const option = this.selectedOption
-      if (option === 'Ventas') {
+      if (option === 'Facturas') {
         this.headers = [
-          { text: 'Item', value: 'item' },
-          { text: 'Referencia', value: 'ref' },
-          { text: 'Precio', value: 'precio' },
-          { text: 'Descripción', value: 'descripcion' },
-          { text: 'Cantidad', value: 'cantidad' },
-          { text: 'Total', value: 'total' },
+          { text: 'Cliente', value: 'cliente' },
+          { text: 'Nota Id', value: 'nonota' },
+          { text: 'Telefono', value: 'telefono' },
+          { text: 'Observaciones', value: 'notas' },
           { text: 'Acciones', value: 'acciones' }
         ]
         this.buttonText = 'Nueva Factura'
-        this.pageTitle = 'Ventas'
+        this.pageTitle = 'Facturas'
         this.getData()
       } else if (option === 'Cotización') {
         this.headers = [
@@ -203,25 +196,25 @@ export default {
         this.getData()
       } else if (option === 'Facturas Recurrentes') {
         this.headers = [
-          { text: 'Número', value: 'numero' },
-          { text: 'Cliente', value: 'cliente' },
-          { text: 'Periodo', value: 'periodo' },
-          { text: 'Monto', value: 'monto' },
-          { text: 'Estado', value: 'estado' },
+        { text: 'Cliente', value: 'cliente' },
+          { text: 'Nota Id', value: 'numeracion' },
+          { text: 'Telefono', value: 'telefono' },
+          { text: 'Observaciones', value: 'observaciones' },
           { text: 'Acciones', value: 'acciones' }
         ]
         this.buttonText = 'Nueva Factura'
         this.pageTitle = 'Facturas Recurrentes'
+        this.getData()
       }
     },
     // Función para obtener la ruta dinámica
     getApiEndpoint () {
-      if (this.selectedOption === 'Ventas') {
+      if (this.selectedOption === 'Facturas') {
         return '/ventas'
       } else if (this.selectedOption === 'Cotización') {
         return '/cotizaciones'
       } else if (this.selectedOption === 'Facturas Recurrentes') {
-        return '/facturas-recurrentes'
+        return '/facturas'
       }
       return '/ventas' // Ruta por defecto si no coincide ninguna
     },
@@ -245,13 +238,11 @@ export default {
         const res = await this.$axios.get(endpoint)
         if (res && res.data && res.data.success) {
           // Asigna la propiedad correspondiente según la opción seleccionada
-          if (this.selectedOption === 'Ventas') {
+          if (this.selectedOption === 'Facturas') {
             this.items = res.data.ventas || [] // Limpia y asigna las ventas
           } else if (this.selectedOption === 'Cotización') {
             // Modificación aquí: Mapea las cotizaciones correctamente
             this.items = res.data.cotizaciones || []
-            // Puedes agregar más transformaciones si lo necesitas
-            // Limpia y asigna las cotizaciones
           } else if (this.selectedOption === 'Facturas Recurrentes') {
             this.items = res.data.facturas || [] // Limpia y asigna las facturas
           }
@@ -279,12 +270,11 @@ export default {
       this.dialogCreateVentas = false
       this.dialogCreateCotizacion = false
       this.dialogCreateFacturaRecurrente = false
-      if (this.selectedOption === 'Ventas') {
+      if (this.selectedOption === 'Facturas') {
         this.dialogCreateVentas = true
       } else if (this.selectedOption === 'Cotización') {
         this.dialogCreateCotizacion = true
       } else if (this.selectedOption === 'Facturas Recurrentes') {
-      // Aquí puedes agregar lógica para abrir el modal correspondiente
         this.dialogCreateFacturaRecurrente = true
       }
     },
@@ -292,20 +282,43 @@ export default {
       this.dialogUpdateVentas = false
       this.dialogUpdateCotizacion = false
       const option = this.selectedOption
-      if (option === 'Ventas') {
-        this.ventaActualizar = item
-        this.dialogUpdateVentas = true
-        this.dialogUpdateCotizacion = false
+      if (option === 'Facturas') {
+       //this.ventaActualizar = item
+        //this.dialogUpdateVentas = true
+        //this.dialogUpdateCotizacion = false
+        this.updateVenta(item)
       } else if (option === 'Cotización') {
         this.updateCotizacion(item)
       } else if (option === 'Facturas Recurrentes') {
-        console.log('Actualizar Factura Recurrente:', item)
+        //this.facturaActualizar = item
+        //this.dialogUpdateFacturaRecurrente = true
+        this.updateFactura(item)
       }
     },
     ventasGuardado () {
       this.getData()
       this.dialogCreateVentas = false
       this.dialogUpdateVentas = false
+    },
+    updateVenta (items) { 
+      if (items) {
+      this.ventaActualizar = items // Asignar la cotización seleccionada
+      this.numeroNota = items.numero_nota 
+      this.contactoSeleccionado = items.contacto // Asignar el contacto
+      this.telefono = items.telefono
+      this.tipoPago = items.tipopago 
+      this.fechaInicio = items.fechainicio 
+      this.terminoFecha = items.fechatermino 
+      this.fechaVencimiento = items.fechavencimiento 
+      this.filas = items.items || [] // Asignar las filas de la tabla (productos), si existen
+      this.terminos = items.terminos 
+      this.notas = items.notas 
+      this.textoResolucion = items.resolucion 
+
+      this.dialogUpdateVentas = true // Abrir el modal de edición
+    } else {
+        console.error('No se proporcionaron datos válidos para la factura')
+      }
     },
     deleteVenta (id) {
       this.idBorrar = id
@@ -332,10 +345,39 @@ export default {
         console.error('No se proporcionaron datos válidos para la cotización')
       }
     },
-
     deleteCotizacion (id) {
       this.idBorrar = id
       this.dialogBorrar = true // Abre el modal de confirmación de borrado
+    },
+    facturaGuardado () {
+      this.getData()
+      this.dialogCreateFacturaRecurrente = false
+      this.dialogUpdateFacturaRecurrente = false
+    },
+    updateFactura (items) {
+      if (items) {
+      this.facturaActualizar = items // Asignar la cotización seleccionada
+      this.numeracionSeleccionada = items.numeracion 
+      this.contactoSeleccionado = items.contacto // Asignar el contacto
+      this.telefono = items.telefono
+      this.fechaInicio = items.fechainicio
+      this.ultimaFecha = items.ultimafecha 
+      this.terminoFecha = items.terminofecha
+      this.fechaExpiracion = items.fechaexpiracion
+      this.frecuenciaSeleccionada = items.frecuencia 
+      this.listaPrecioSeleccionada = items.listaPrecio
+      this.notas = items.notas 
+      this.observaciones = items.observaciones
+      this.filas = items.items || [] // Asignar las filas de la tabla (productos), si existen
+
+        this.dialogUpdateFacturaRecurrente = true // Abrir el modal de edición
+      } else {
+        console.error('No se proporcionaron datos válidos para la factura recurrente')
+      }
+    },
+    deleteFactura (id) {
+      this.idBorrar = id
+      this.dialogBorrar = true
     },
     // Función para actualizar el teléfono cuando se cambia el contacto
     actualizarTelefono () {
@@ -357,8 +399,6 @@ export default {
         this.inventarios = [] // Aseguramos que se limpie en caso de error
       } // Esto te ayudará a revisar la respuesta en la consola
     }
-
   }
-
 }
 </script>
