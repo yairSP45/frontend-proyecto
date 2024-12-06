@@ -231,6 +231,17 @@ export default {
         console.error('Error al cargar clientes:', error)
       }
     },
+
+    async verificarEstadoFacturas() {
+    const hoy = new Date();
+    
+    // Recorre los ítems (cotizaciones) y verifica las fechas
+    this.items = this.items.map(cotizacion => {
+      const fechaVencimiento = new Date(cotizacion.vencimiento);
+      cotizacion.estado = fechaVencimiento >= hoy ? 'Activa' : 'No Activa';
+      return cotizacion;
+    });
+  },
     // Reutiliza esta función para todas las categorías
     async getData () {
       const endpoint = this.getApiEndpoint()
@@ -246,6 +257,8 @@ export default {
           } else if (this.selectedOption === 'Facturas Recurrentes') {
             this.items = res.data.facturas || [] // Limpia y asigna las facturas
           }
+        // Llama a la función de verificación del estado después de obtener los datos
+        await this.verificarEstadoFacturas();
         } else {
           this.items = [] // Si la respuesta no tiene éxito, limpia la tabla
         }
@@ -307,7 +320,6 @@ export default {
       this.contactoSeleccionado = items.contacto // Asignar el contacto
       this.telefono = items.telefono
       this.tipoPago = items.tipopago 
-      this.fechaInicio = items.fechainicio 
       this.terminoFecha = items.fechatermino 
       this.fechaVencimiento = items.fechavencimiento 
       this.filas = items.items || [] // Asignar las filas de la tabla (productos), si existen

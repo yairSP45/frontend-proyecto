@@ -74,89 +74,61 @@
 
           <!-- Fechas -->
           <v-row>
+  <v-col cols="12" sm="6" class="d-flex align-center">
+    <h4 class="mr-2">
+      Fecha de Inicio
+    </h4>
+    <v-menu
+      ref="menuTermino"
+      v-model="menuTerminoVisible"
+      :close-on-content-click="false"
+      transition="scale-transition"
+      offset-y
+    >
+      <template #activator="{ on, attrs }">
+        <v-text-field
+          v-model="terminoFecha"
+          label="Término"
+          readonly
+          dense
+          outlined
+          v-bind="attrs"
+          v-on="on"
+        />
+      </template>
+      <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
+    </v-menu>
+  </v-col>
 
-            <v-col cols="12" sm="4" class="d-flex align-center">
-              <h4 class="mr-2">
-                Fecha
-              </h4>
-              <v-menu
-                ref="menuFecha"
-                v-model="menuInicioFecha"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-              >
-                <template #activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="inicioFecha"
-                    label="Fecha"
-                    readonly
-                    dense
-                    outlined
-                    v-bind="attrs"
-                    v-on="on"
-                  />
-                </template>
-                <v-date-picker v-model="inicioFecha" @input="menuInicioFecha = false" />
-              </v-menu>        
-            </v-col>
-
-            <v-col cols="12" sm="3" class="d-flex align-center">
-              <h4 class="mr-2">
-                Término
-              </h4>
-              <v-menu
-                ref="menuTermino"
-                v-model="menuTerminoVisible"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-              >
-                <template #activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="terminoFecha"
-                    label="Término"
-                    readonly
-                    dense
-                    outlined
-                    v-bind="attrs"
-                    v-on="on"
-                  />
-                </template>
-                <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
-              </v-menu>
-            </v-col>
-
-            <v-col cols="12" sm="4" class="d-flex align-center">
-              <h4 class="mr-2">
-                Fecha de Vencimiento
-              </h4>
-              <v-menu
-                ref="menuVencimiento"
-                v-model="menuVencimiento"
-                :close-on-content-click="false"
-                transition="scale-transition"
-                offset-y
-              >
-                <template #activator="{ on, attrs }">
-                  <v-text-field
-                    v-model="fechaVencimiento"
-                    label="Fecha de Vencimiento"
-                    readonly
-                    dense
-                    outlined
-                    v-bind="attrs"
-                    v-on="on"
-                  />
-                </template>
-                <v-date-picker
-                  v-model="fechaVencimiento"
-                  @input="menuVencimiento = false"
-                />
-              </v-menu>
-            </v-col>
-
-          </v-row>
+  <v-col cols="12" sm="6" class="d-flex align-center">
+    <h4 class="mr-2">
+      Fecha de Vencimiento
+    </h4>
+    <v-menu
+      ref="menuVencimiento"
+      v-model="menuVencimiento"
+      :close-on-content-click="false"
+      transition="scale-transition"
+      offset-y
+    >
+      <template #activator="{ on, attrs }">
+        <v-text-field
+          v-model="fechaVencimiento"
+          label="Fecha de Vencimiento"
+          readonly
+          dense
+          outlined
+          v-bind="attrs"
+          v-on="on"
+        />
+      </template>
+      <v-date-picker
+        v-model="fechaVencimiento"
+        @input="menuVencimiento = false"
+      />
+    </v-menu>
+  </v-col>
+</v-row>
 
           <!-- Tabla de ítems -->
           <v-divider />
@@ -431,7 +403,6 @@ export default {
       // Asignar datos básicos
       this.numeroNota = venta.nonota || ''
       this.tipoPago = venta.tipopago || ''
-      this.inicioFecha = venta.fechainicio || ''
       this.terminoFecha = venta.fechatermino || ''
       this.fechaVencimiento = venta.fechavencimiento || ''
       this.terminos = venta.terminos || ''
@@ -546,7 +517,6 @@ export default {
         cliente: contacto.nombre,
         telefono: contacto.telefono,
         tipopago: this.tipoPago,
-        fechainicio: this.inicioFecha,  
         fechatermino: this.terminoFecha,
         fechavencimiento: this.fechaVencimiento,
         producto: productos,
@@ -590,7 +560,6 @@ export default {
       this.contactoSeleccionado = null
       this.numeroNota = ''
       this.tipoPago = ''
-      this.inicioFecha = ''
       this.terminoFecha = ''
       this.fechaVencimiento = ''
       this.terminos = ''

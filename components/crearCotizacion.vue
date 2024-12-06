@@ -4,7 +4,7 @@
       <v-card-title>
         <div class="d-flex justify-space-between align-center">
           <h1 class="title">
-            {{ inside && update ? 'Actualiza Cotización' : (inside ? 'Registra una Nueva Factura' : '') }}
+            {{ inside && update ? 'Actualiza Cotización' : (inside ? 'Registra una Nueva Cotizacion' : '') }}
           </h1>
         </div>
       </v-card-title>

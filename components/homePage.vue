@@ -8,84 +8,57 @@
       <!-- Sección de Actividad -->
       <div class="activity-section" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); padding: 20px; margin-bottom: 20px; flex: 1; overflow: hidden;">
         <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-          <!-- Texto de la esquina izquierda -->
           <h3 style="color: #1B262C; font-size: 18px; line-height: 21.6px;">
-            Enero 2020 - febrero 2020
+            Diciembre 2024 - Enero 2025
           </h3>
-
-          <!-- Contenedor de los botones en la esquina derecha -->
-          <div class="period-buttons" style="display: flex; background-color: #C4C4C4; border-radius: 50px; padding: 3px; width: 296px; height: 37px;">
-            <button
-              :class="{ active: selectedPeriod === 'Mes' }"
-              style="width: 97px; height: 31px; background-color: transparent; border: none; border-radius: 15px; font-size: 14px; color: #555; cursor: pointer; transition: background-color 0.3s, color 0.3s;"
-              :style="{ backgroundColor: selectedPeriod === 'Mes' ? '#ffffff' : 'transparent', color: selectedPeriod === 'Mes' ? '#333' : '#555', fontWeight: selectedPeriod === 'Mes' ? 'bold' : 'normal', boxShadow: selectedPeriod === 'Mes' ? '0 2px 5px rgba(0, 0, 0, 0.15)' : 'none' }"
-              @click="setPeriod('Mes')"
-            >
-              Mes
-            </button>
-            <button
-              :class="{ active: selectedPeriod === '1 Año' }"
-              style="width: 97px; height: 31px; background-color: transparent; border: none; border-radius: 15px; font-size: 14px; color: #555; cursor: pointer; transition: background-color 0.3s, color 0.3s;"
-              :style="{ backgroundColor: selectedPeriod === '1 Año' ? '#ffffff' : 'transparent', color: selectedPeriod === '1 Año' ? '#333' : '#555', fontWeight: selectedPeriod === '1 Año' ? 'bold' : 'normal', boxShadow: selectedPeriod === '1 Año' ? '0 2px 5px rgba(0, 0, 0, 0.15)' : 'none' }"
-              @click="setPeriod('1 Año')"
-            >
-              1 Año
-            </button>
-            <button
-              :class="{ active: selectedPeriod === '2 Años' }"
-              style="width: 97px; height: 31px; background-color: transparent; border: none; border-radius: 15px; font-size: 14px; color: #555; cursor: pointer; transition: background-color 0.3s, color 0.3s;"
-              :style="{ backgroundColor: selectedPeriod === '2 Años' ? '#ffffff' : 'transparent', color: selectedPeriod === '2 Años' ? '#333' : '#555', fontWeight: selectedPeriod === '2 Años' ? 'bold' : 'normal', boxShadow: selectedPeriod === '2 Años' ? '0 2px 5px rgba(0, 0, 0, 0.15)' : 'none' }"
-              @click="setPeriod('2 Años')"
-            >
-              2 Años
-            </button>
-          </div>
         </div>
 
         <!-- Estadísticas -->
-        <div class="stats" style="display: flex; justify-content: flex-start; margin-top: 20px; flex-wrap: wrap;">
+        <div class="stats" style="display: flex; justify-content: space-between; margin-top: 20px;">
           <!-- Contactos -->
-          <div style="text-align: left; display: flex; flex-direction: column; align-items: flex-start; margin: 10px;">
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1;">
             <h3 style="font-size: 1rem; color: #555;">
               Contactos
             </h3>
             <p style="font-size: 1.5rem; color: #007bff;">
-              123,000
+              {{ totalContactos.toLocaleString() }}
             </p>
           </div>
-          <!-- Ventas -->
-          <div style="text-align: left; display: flex; flex-direction: column; align-items: flex-start; margin: 10px;">
+          <!-- Productos -->
+          <div style="text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1;">
             <h3 style="font-size: 1rem; color: #555;">
-              Ventas
+              Productos
             </h3>
             <p style="font-size: 1.5rem; color: #007bff;">
-              2,300
+              {{ totalProductos.toLocaleString() }}
             </p>
           </div>
         </div>
 
-        <!-- Gráfica -->
-        <div class="chart" style="height: 150px; background-color: #eef3fc; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: #999;">
-          <p>Aquí irá la gráfica de barras</p>
+        <!-- Gráfica de Barras Comparativa -->
+        <div class="chart" style="height: 160px; background-color: #eef3fc; border-radius: 8px; display: flex; justify-content: space-around; align-items: flex-end; padding: 10px;">
+          <!-- Barra de Contactos -->
+          <div class="bar" :style="getBarStyle(totalContactos, '#4BC0C0')">
+            <span class="label" style="text-align: center; color: #fff; font-size: 12px; padding-top: 5px;">{{ totalContactos }}</span>
+          </div>
+
+          <!-- Barra de Productos -->
+          <div class="bar" :style="getBarStyle(totalProductos, '#9966FF')">
+            <span class="label" style="text-align: center; color: #fff; font-size: 12px; padding-top: 5px;">{{ totalProductos }}</span>
+          </div>
         </div>
       </div>
 
       <!-- Sección Inferior -->
       <div class="bottom-section" style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <!-- Cotizaciones Nuevas -->
+        <!-- Contactos Nuevos -->
         <div class="card" style="flex: 1 1 45%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); padding: 20px; height: 100%;">
           <h3 style="font-size: 1rem; margin-bottom: 10px; color: #333;">
-            Cotizaciones Nuevas
+            Nuevos Contactos
           </h3>
           <ul style="list-style: none; padding: 0;">
-            <li style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
-              Venta de Hp...
-            </li>
-            <li style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
-              Venta de Audífonos...
-            </li>
-            <li style="margin-bottom: 0; font-size: 0.9rem; color: #555;">
-              Hp Portátil...
+            <li v-for="contacto in contactos" :key="contacto.id" style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
+              {{ contacto.nombre }}
             </li>
           </ul>
         </div>
@@ -95,14 +68,8 @@
             Últimos Productos
           </h3>
           <ul style="list-style: none; padding: 0;">
-            <li style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
-              Hp Pavilion h2342
-            </li>
-            <li style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
-              Hp Pavilion h2342wvfg...
-            </li>
-            <li style="margin-bottom: 0; font-size: 0.9rem; color: #555;">
-              Hp Pavilion h2342...
+            <li v-for="producto in productos" :key="producto.id" style="margin-bottom: 5px; font-size: 0.9rem; color: #555;">
+              {{ producto.item }}
             </li>
           </ul>
         </div>
@@ -113,15 +80,70 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-      selectedPeriod: 'Mes' // Valor inicial
-    }
+      selectedPeriod: 'Mes',
+      contactos: [],
+      productos: [],
+      totalContactos: 0,
+      totalProductos: 0
+    };
+  },
+  async mounted() {
+    await this.getContactos();
+    await this.getProductos();
   },
   methods: {
-    setPeriod (period) {
-      this.selectedPeriod = period
+    setPeriod(period) {
+      this.selectedPeriod = period;
+    },
+    async getContactos() {
+      try {
+        const res = await this.$axios.get('/clientes');
+        this.contactos = res.data.clientes || [];
+        this.totalContactos = this.contactos.length;
+      } catch (error) {
+        console.error('Error al obtener clientes:', error);
+      }
+    },
+    async getProductos() {
+      try {
+        const res = await this.$axios.get('/inventarios');
+        this.productos = res.data.inventarios || [];
+        this.totalProductos = this.productos.length;
+      } catch (error)        {
+        console.error('Error al obtener inventarios:', error);
+      }
+    },
+    // Función para obtener el estilo dinámico de la barra
+    getBarStyle(value, color) {
+      const scale = 8; // Factor aumentado para hacer las barras más anchas
+      const minHeight = 40; // Altura mínima
+      const height = (value * scale) + minHeight; // Escala la altura de las barras
+
+      return {
+        backgroundColor: color,
+        width: '100px', // Barras más anchas
+        height: `${height}px` // Ajustamos la altura
+      };
     }
   }
-}
+};
 </script>
+
+<style scoped>
+.bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 4px;
+}
+
+.label {
+  padding-top: 5px;
+  font-size: 12px;
+}
+</style>
+
+
+
