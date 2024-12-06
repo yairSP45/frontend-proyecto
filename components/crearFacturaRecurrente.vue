@@ -4,40 +4,38 @@
       <v-card-title>
         <div class="d-flex justify-space-between align-center">
           <h1 class="title">
-            NUEVA FACTURA RECURRENTE
+            {{ inside && update ? 'Actualiza la Factura recurrente' : (inside ? 'Registra Nueva Factura Recurrente' : '') }}
           </h1>
         </div>
       </v-card-title>
 
       <v-card-text>
-        <v-form @submit.prevent="guardarCotizacion">
+        <v-form @submit.prevent="guardarFactura">
           <!-- Información general -->
           <v-row>
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
                 Numeración
               </h4>
-              <v-select
+              <v-text-field
                 v-model="numeracionSeleccionada"
-                :items="numeraciones"
-                item-text="nombre"
-                item-value="id"
                 label="Numeración"
                 dense
                 outlined
                 required
               />
             </v-col>
+
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
-                Cliente
+                Contacto
               </h4>
               <v-select
                 v-model="contactoSeleccionado"
                 :items="contactos"
                 item-text="nombre"
                 item-value="id"
-                label="Cliente"
+                label="Contacto"
                 dense
                 outlined
                 required
@@ -46,10 +44,19 @@
             </v-col>
             <v-col cols="12" sm="4" class="d-flex align-center">
               <h4 class="mr-2">
-                Observaciones
+                Teléfono
               </h4>
-              <v-textarea v-model="observaciones" label="Observaciones" dense outlined />
+              <v-text-field
+                v-model="telefono"
+                label="Teléfono"
+                dense
+                outlined
+                disabled
+                required
+                readonly
+              />
             </v-col>
+
           </v-row>
 
           <!-- Fechas -->
@@ -164,7 +171,7 @@
               </h4>
               <v-select
                 v-model="frecuenciaSeleccionada"
-                :items="frecuencias"
+                :items="['1', '2', '3', '4', '5', '6', '7', '8', '9', '10' ]"
                 item-text="nombre"
                 item-value="id"
                 label="Frecuencia"
@@ -178,7 +185,7 @@
               </h4>
               <v-select
                 v-model="listaPrecioSeleccionada"
-                :items="listasPrecio"
+                :items="['General','Mayoritario']"
                 item-text="nombre"
                 item-value="id"
                 label="Lista de precio"
@@ -190,12 +197,20 @@
 
           <!-- Notas de la factura -->
           <v-row>
-            <v-col cols="12" class="d-flex align-center">
-              <h5 class="mr-2">
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
                 Notas de Factura
-              </h5>
-              <v-textarea v-model="notas" label="Notas de Factura" dense outlined style="font-size: 12px;" />
+              </h4>
+              <v-textarea v-model="notas" label="Notas de Factura" dense outlined />
             </v-col>
+
+            <v-col cols="12" sm="4" class="d-flex align-center">
+              <h4 class="mr-2">
+                Observaciones
+              </h4>
+              <v-textarea v-model="observaciones" label="Observaciones" dense outlined />
+            </v-col>
+
           </v-row>
 
           <!-- Tabla de ítems -->
@@ -285,11 +300,11 @@
 
           <v-row>
             <v-col cols="12" class="d-flex justify-space-between">
-              <v-btn outlined color="grey">
+              <v-btn outlined color="grey" @click="cancelar">
                 Cancelar
               </v-btn>
-              <v-btn color="blue" @click="guardarCotizacion">
-                Guardar
+              <v-btn color="blue" @click="guardarFactura">
+                {{ inside && update ? 'Actualizar' : (inside ? 'Guardar' : '') }}
               </v-btn>
             </v-col>
           </v-row>
@@ -301,6 +316,11 @@
 
 <script>
 export default {
+  props: {
+    inside: { type: Boolean, default: false },
+    update: { type: Boolean, default: false },
+    facturaEditada: { type: Object, default: null } 
+  },
   data () {
     return {
       headers: [
@@ -333,17 +353,35 @@ export default {
       total: 0,
       telefono: '',
       contactoSeleccionado: null,
-      numeroNota: '',
-      fecha: '',
-      fechaVencimiento: '',
+      numeracionSeleccionada: '',
+      fechaInicio: '',
+      ultimaFecha: '',
+      terminoFecha: '',
+      fechaExpiracion: '',
       menuFecha: false,
       menuVencimiento: false,
-      notas: ''
+      menuTerminoVisible: false,
+      menuExpiracionVisible: false,
+      observaciones: '',
+      listaPrecioSeleccionada: '',
+      frecuenciaSeleccionada: ''
+    }
+  },
+  watch: {
+    facturaEditada (newValue) {
+      if (newValue) {
+        this.cargarFactura(newValue)
+      }
     }
   },
   mounted () {
     this.getContactos()
-    this.getProductos()
+    .then(() => this.getProductos())
+    .then(() => {
+        if (this.update && this.facturaEditada) {
+          this.cargarFactura(this.facturaEditada)
+        }
+      })
   },
   methods: {
     async getContactos () {
@@ -352,6 +390,7 @@ export default {
         if (res.data && res.data.success) {
           this.contactos = res.data.clientes
         }
+
       } catch (error) {
         console.error('Error al obtener los contactos:', error)
       }
@@ -365,6 +404,67 @@ export default {
       } catch (error) {
         console.error('Error al obtener los productos:', error)
       }
+    },
+    cargarFactura (factura) {
+      this.contactoSeleccionado = null
+      this.telefono = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
+
+      const contacto = this.contactos.find(c => c.nombre.trim() === factura.cliente.trim())
+
+      if (contacto) {
+        this.contactoSeleccionado = contacto.id
+        this.telefono = contacto.telefono
+      } 
+
+      // Asignar datos básicos
+      this.numeracionSeleccionada = factura.numeracion || ''   
+      this.fechaInicio = factura.iniciofecha || ''
+      this.ultimaFecha = factura.ultimafecha || ''
+      this.terminoFecha = factura.termino || ''
+      this.fechaExpiracion = factura.expiracion || ''
+      this.frecuenciaSeleccionada = factura.frecuencia || ''
+      this.listaPrecioSeleccionada = factura.listprecio || ''
+      this.notas = factura.notafacturas || ''
+      this.observaciones = factura.observaciones || ''
+
+      // Asignar productos a las filas
+      this.filas = factura.producto.map((producto) => {
+        const prod = this.productos.find(p => p.item.trim() === producto.nombreproducto.trim())
+        if (prod) {
+          return {
+            item: prod.id,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+        } 
+          return {
+            item: null,
+            referencia: producto.referencia || '',
+            precio: producto.precio || 0,
+            descuento: producto.descuento || 0,
+            impuesto: producto.impuesto || 0,
+            descripcion: producto.descripcion || '',
+            cantidad: producto.cantidad || 1,
+            total: producto.total || 0
+          }
+      })
+      // Recalcular totales
+      this.calcularTotales()
     },
     agregarFila () {
       this.filas.push({
@@ -410,14 +510,115 @@ export default {
       this.impuestos = this.filas.reduce((sum, fila) => sum + (fila.impuesto / 100) * (fila.precio * fila.cantidad), 0)
       this.total = this.subtotal + this.impuestos
     },
-    guardarCotizacion () {
-      console.log('Cotización guardada')
+    guardarFactura () {
+      const productos = this.filas.map((fila) => {
+        const producto = this.productos.find(prod => prod.id === fila.item)
+        return {
+          nombreproducto: producto?.item || '',
+          referencia: fila.referencia || '',
+          precio: parseFloat(fila.precio) || 0,
+          descuento: parseFloat(fila.descuento) || 0,
+          impuesto: parseFloat(fila.impuesto) || 0,
+          descripcion: fila.descripcion || '',
+          cantidad: parseInt(fila.cantidad) || 0,
+          total: parseFloat(fila.total) || 0
+        }
+      })
+
+      const productosValidos = productos.every(p =>
+    p.nombreproducto &&
+    p.referencia &&
+    p.precio >= 0 &&
+    p.cantidad > 0 &&
+    p.total >= 0
+      )
+
+      if (!productosValidos) {
+        alert('Hay errores en los datos de los productos. Por favor, verifica.')
+        return
+      }
+
+      const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
+
+      const facturaData = {
+        numeracion: this.numeracionSeleccionada,
+        cliente: contacto.nombre,
+        telefono: contacto.telefono,
+        observaciones: this.observaciones,
+        iniciofecha: this.fechaInicio,  
+        ultimafecha: this.ultimaFecha,
+        termino: this.terminoFecha,
+        expiracion: this.fechaExpiracion,
+        frecuencia: this.frecuenciaSeleccionada,
+        listprecio: this.listaPrecioSeleccionada,
+        notafacturas: this.notas,
+        producto: productos,
+
+        total: this.total
+      }
+
+      if (this.update) {
+        // Si estamos en modo edición, actualiza la factura
+        this.$axios.put(`/facturas/update/${this.facturaEditada.id}`, facturaData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al actualizar la factura', error)
+          })
+      } else {
+        // Si estamos creando una factura nueva
+        this.$axios.post('/facturas/create', facturaData)
+          .then((response) => {
+            if (response.data.success) {
+              this.limpiarFormulario()
+              this.$emit('guardado')
+            } else {
+              console.error(response.data.message)
+            }
+          })
+          .catch((error) => {
+            console.error('Error al guardar la factura', error)
+          })
+      }
+    },
+    limpiarFormulario () {
+      this.contactoSeleccionado = null
+      this.numeracionSeleccionada = ''
+      this.observaciones = ''
+      this.fechaInicio = ''
+      this.ultimaFecha = ''
+      this.terminoFecha = ''
+      this.fechaExpiracion = ''
+      this.frecuenciaSeleccionada = ''
+      this.listaPrecioSeleccionada = ''
+      this.notas = ''
+      this.filas = [{
+        item: null,
+        referencia: '',
+        precio: 0,
+        descuento: 0,
+        impuesto: 0,
+        descripcion: '',
+        cantidad: 1,
+        total: 0
+      }]
+      this.subtotal = 0
+      this.impuestos = 0
+      this.total = 0
     },
     actualizarTelefono () {
       const contacto = this.contactos.find(c => c.id === this.contactoSeleccionado)
       this.telefono = contacto ? contacto.telefono : ''
+    },
+    cancelar () {
+      this.$emit('click-cancel')
     }
-
   }
 }
 </script>
