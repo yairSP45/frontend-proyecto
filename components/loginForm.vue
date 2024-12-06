@@ -48,12 +48,6 @@
             Registrate
           </span>
         </v-btn>
-
-        <p class="text-center mt-4">
-          <a href="/forgot-password" style="color: #6C48C5; text-decoration: underline;">
-            ¿Olvidaste la contraseña?
-          </a>
-        </p>
       </v-card-actions>
     </v-card>
   </v-container>

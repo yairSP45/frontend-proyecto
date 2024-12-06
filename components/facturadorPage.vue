@@ -15,21 +15,25 @@
           <!-- Panel de productos -->
           <div class="panel-productos">
             <div class="toolbar">
-              <div class="icon-container" style="background-color: #3282B8; width: 74px; height: 47px; display: flex; justify-content: center; align-items: center; border-radius: 4px;">
-                <button class="icon-button">
-                  <i class="mdi mdi-magnify" style="font-size: 18.71px; width: 18.71px;" />
+              <div class="icon-container" style="background-color: #3282B8; width: 74px; height: 47px; display: flex; justify-content: center; align-items: center; border-radius: 4px; pointer-events: none;">
+                <button>
+                  <i class="mdi mdi-magnify" style="font-size: 18.71px; width: 18.71px; pointer-events: none;" />
                 </button>
               </div>
-              <input type="text" class="input-busqueda" placeholder="PRODUCTOS" style="height: 47px;">
-              <div class="icon-container" style="width: 74px; height: 47px; margin-left: 50px;">
-                <button class="agregar-button">
-                  <i class="mdi mdi-file-plus-outline" style="font-size: 35px; width: 28px;" /> Agregar
-                </button>
-              </div>
+              <input v-model="searchQuery" type="text" class="input-busqueda" placeholder="PRODUCTOS" style="height: 47px;">
             </div>
             <ul class="lista-productos">
+              <!-- Mostrar mensaje si no hay resultados después de filtrar -->
               <li
-                v-for="product in products"
+                v-if="filteredProducts().length === 0"
+                class="producto-item"
+              >
+                No se encontraron productos que coincidan con tu búsqueda.
+              </li>
+
+              <!-- Mostrar los productos (todos o filtrados) -->
+              <li
+                v-for="product in filteredProducts()"
                 :key="product.id"
                 class="producto-item"
                 :style="{
@@ -50,7 +54,7 @@
                   <span class="producto-nombre">{{ product.item }}</span>
                 </div>
                 <div class="producto-precio">
-                  ${{ product.precio.toLocaleString() }}
+                  ${{ product.precio.toLocaleString('es-MX') }}
                 </div>
                 <button class="icon-button" style="color: #C4C4C4;" @click="addToCart(product)">
                   <i class="mdi mdi-star-outline" />
@@ -74,14 +78,9 @@
                     item-value="id"
                     label="Selecciona un cliente"
                     placeholder="Clientes"
-                    style="width: 373px; height: 50px; margin-left: 30px;"
+                    style="width: 500px; height: 50px; margin-left: 30px;"
                     outlined
                   />
-                </div>
-                <div class="icon-container" style="width: 74px; height: 47px; margin-right: 10px;">
-                  <button class="agregar-button">
-                    <i class="mdi mdi-file-plus-outline" style="font-size: 25px; width: 25px;" /> Agregar
-                  </button>
                 </div>
               </div>
             </div>
@@ -92,7 +91,7 @@
                 <div class="venta-item-info">
                   <span class="producto-nombre">{{ item.item }}</span>
                   <div class="producto-info">
-                    <span class="producto-precio" style="margin-right: 50px;">${{ item.precio.toLocaleString() }}</span>
+                    <span class="producto-precio" style="margin-right: 50px;">${{ item.precio.toLocaleString('es-MX') }}</span>
                     <span class="producto-codigo">{{ item.ref }}</span>
                   </div>
                 </div>
@@ -169,7 +168,8 @@ export default {
       selectedClient: null, // Debe contener el objeto completo del cliente
       selectedProduct: null,
       dialogCreateFactura: false,
-      facturaEnviar: {}
+      facturaEnviar: {},
+      searchQuery: ''
     }
   },
   computed: {
@@ -243,6 +243,12 @@ export default {
         return
       }
 
+      // Verifica que haya productos en el carrito
+      if (this.cart.length === 0) {
+        alert('Por favor agrega al menos un producto al carrito.')
+        return
+      }
+
       // Busca el cliente por ID en la lista de clientes
       const clienteSeleccionado = this.clientes.find(cliente => cliente.id === this.selectedClient)
 
@@ -285,8 +291,32 @@ export default {
       } else {
         alert('Cliente no encontrado.')
       }
-    }
+    },
+    filteredProducts () {
+      const query = this.searchQuery.toLowerCase().trim()
 
+      // Si no hay texto en el input, retorna todos los productos
+      if (!query) {
+        return this.products
+      }
+
+      // Filtra los productos por coincidencia con `ref` o `item`
+      return this.products.filter((product) => {
+        const ref = product.ref ? product.ref.toString().toLowerCase() : '' // Asegura que `ref` es string
+        const item = product.item ? product.item.toString().toLowerCase() : '' // Asegura que `item` es string
+
+        return ref.includes(query) || item.includes(query)
+      })
+    },
+
+    onSearch () {
+      if (!this.searchQuery.trim()) {
+        // Si el input está vacío, aseguramos que los productos estén visibles
+        return this.products
+      }
+      // Ejecutar el filtro en cualquier otro caso (ya lo hace filteredProducts)
+      return this.filteredProducts()
+    }
   }
 }
 </script>

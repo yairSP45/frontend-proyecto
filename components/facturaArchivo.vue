@@ -94,20 +94,21 @@
         </v-card-text>
       </v-card>
     </div>
-    <!-- Botones de acción -->
-    <v-card-actions>
-      <v-spacer />
-      <v-btn color="red" dark @click="cancelar">
-        Cancelar
-      </v-btn>
-      <v-btn color="green" dark @click="guardar">
-        Guardar
-      </v-btn>
-      <v-btn color="blue" dark @click="imprimir">
-        Imprimir
-      </v-btn>
-    </v-card-actions>
-    <!-- Contenido de la factura -->
+    <div style="background-color: #ffffff; padding: 5px; height: 50px; overflow: hidden;">
+      <!-- Contenedor con display flex para centrar los botones en columnas -->
+      <v-row class="d-flex justify-center align-center">
+        <v-col cols="auto" class="d-flex justify-center">
+          <v-btn color="#C4C4C4" dark @click="cancelar">
+            Cancelar
+          </v-btn>
+        </v-col>
+        <v-col cols="auto" class="d-flex justify-center">
+          <v-btn color="#3282B8" dark @click="imprimir">
+            Imprimir
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
   </div>
 </template>
 
@@ -149,10 +150,6 @@ export default {
   methods: {
     cancelar () {
       this.$emit('click-cancel')
-    },
-    guardar () {
-      // Imprimir los valores de factura al guardar
-      console.log('Datos de Factura Guardados:')
     },
     imprimir () {
       const doc = new jsPDF({
