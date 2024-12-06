@@ -16,9 +16,9 @@
         <v-list-item>
           <v-list-item-content style="text-align: center;">
             <v-list-item-title
-              style="font-weight: 700; font-size: 36px; line-height: 43.2px; text-align: center; margin: 15%; color: white;"
+              style="text-align: center; margin: 15%;"
             >
-              LOGO
+              <img src="../assets/logo.jpeg" alt="Logo" style="max-width: 100%; height: auto;">
             </v-list-item-title>
           </v-list-item-content>
         </v-list-item>
@@ -34,7 +34,8 @@
           font-weight: 700;
           font-size: 18px;
           line-height: 21.6px;
-          margin-bottom: 10px;"
+          margin-bottom: 10px;
+          color: white"
           @click="setActive(index)"
         >
           <v-list-item-icon style="position: relative;">
