@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[24],{633:function(t,n,o){"use strict";o.r(n);var e={layout:"dashboard",middleware:"auth"},r=o(67),component=Object(r.a)(e,(function(){this._self._c;return this._m(0)}),[function(){var t=this._self._c;return t("div",[t("h1",[this._v("Hola a todos")])])}],!1,null,"0f4f09b8",null);n.default=component.exports}}]);

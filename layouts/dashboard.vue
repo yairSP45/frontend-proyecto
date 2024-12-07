@@ -62,8 +62,7 @@ export default {
         { title: 'Contactos', path: '/dashboard/contactos', icon: 'mdi-account-box-outline' },
         { title: 'Ventas', path: '/dashboard/ventas', icon: 'mdi-sale-outline' },
         { title: 'Inventarios', path: '/dashboard/inventarios', icon: 'mdi-store-check-outline' },
-        { title: 'Facturador', path: '/dashboard/facturador', icon: 'mdi-text-box-edit-outline' },
-        { title: 'Configuración', path: '/dashboard/configuracion', icon: 'mdi-cog' }
+        { title: 'Facturador', path: '/dashboard/facturador', icon: 'mdi-text-box-edit-outline' }
       ],
       activeIndex: null // Índice del elemento seleccionado
     }

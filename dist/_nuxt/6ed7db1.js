@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[28],{634:function(n,o,t){"use strict";t.r(o);var e={components:{signupForm:t(625).default},auth:!1,layout:"login"},l=t(67),component=Object(l.a)(e,(function(){var n=this._self._c;return n("div",[n("signup-form")],1)}),[],!1,null,"6280a5ed",null);o.default=component.exports}}]);

@@ -2,12 +2,12 @@
   <v-container class="quote-container" width="1000">
     <v-card flat elevation="0" color="#FFFFFF">
       <v-card-title>
-      <div class="d-flex justify-space-between align-center">
-        <h1 class="title">
-          {{ inside && update ? 'Actualiza la Factura' : (inside ? 'Registra Nueva Factura' : '') }}
-        </h1>
-      </div>
-    </v-card-title>
+        <div class="d-flex justify-space-between align-center">
+          <h1 class="title">
+            {{ inside && update ? 'Actualiza la Factura' : (inside ? 'Registra Nueva Factura' : '') }}
+          </h1>
+        </div>
+      </v-card-title>
       <v-card-text>
         <v-form @submit.prevent="guardarVenta">
           <!-- Información general -->
@@ -74,61 +74,61 @@
 
           <!-- Fechas -->
           <v-row>
-  <v-col cols="12" sm="6" class="d-flex align-center">
-    <h4 class="mr-2">
-      Fecha de Inicio
-    </h4>
-    <v-menu
-      ref="menuTermino"
-      v-model="menuTerminoVisible"
-      :close-on-content-click="false"
-      transition="scale-transition"
-      offset-y
-    >
-      <template #activator="{ on, attrs }">
-        <v-text-field
-          v-model="terminoFecha"
-          label="Término"
-          readonly
-          dense
-          outlined
-          v-bind="attrs"
-          v-on="on"
-        />
-      </template>
-      <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
-    </v-menu>
-  </v-col>
+            <v-col cols="12" sm="6" class="d-flex align-center">
+              <h4 class="mr-2">
+                Fecha de Inicio
+              </h4>
+              <v-menu
+                ref="menuTermino"
+                v-model="menuTerminoVisible"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="terminoFecha"
+                    label="Término"
+                    readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                  />
+                </template>
+                <v-date-picker v-model="terminoFecha" @input="menuTerminoVisible = false" />
+              </v-menu>
+            </v-col>
 
-  <v-col cols="12" sm="6" class="d-flex align-center">
-    <h4 class="mr-2">
-      Fecha de Vencimiento
-    </h4>
-    <v-menu
-      ref="menuVencimiento"
-      v-model="menuVencimiento"
-      :close-on-content-click="false"
-      transition="scale-transition"
-      offset-y
-    >
-      <template #activator="{ on, attrs }">
-        <v-text-field
-          v-model="fechaVencimiento"
-          label="Fecha de Vencimiento"
-          readonly
-          dense
-          outlined
-          v-bind="attrs"
-          v-on="on"
-        />
-      </template>
-      <v-date-picker
-        v-model="fechaVencimiento"
-        @input="menuVencimiento = false"
-      />
-    </v-menu>
-  </v-col>
-</v-row>
+            <v-col cols="12" sm="6" class="d-flex align-center">
+              <h4 class="mr-2">
+                Fecha de Vencimiento
+              </h4>
+              <v-menu
+                ref="menuVencimiento"
+                v-model="menuVencimiento"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+              >
+                <template #activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="fechaVencimiento"
+                    label="Fecha de Vencimiento"
+                    readonly
+                    dense
+                    outlined
+                    v-bind="attrs"
+                    v-on="on"
+                  />
+                </template>
+                <v-date-picker
+                  v-model="fechaVencimiento"
+                  @input="menuVencimiento = false"
+                />
+              </v-menu>
+            </v-col>
+          </v-row>
 
           <!-- Tabla de ítems -->
           <v-divider />
@@ -267,23 +267,8 @@
                 Previsualizar
               </v-btn>
               <v-btn color="blue" @click="guardarVenta">
-                {{ inside && update ? 'Actualizar' : (inside ? 'Enviar y agregar pago' : '') }}
+                {{ inside && update ? 'Actualizar' : (inside ? 'Guardar' : '') }}
               </v-btn>
-              <v-menu>
-                <template #activator="{ on, attrs }">
-                  <v-btn color="blue" v-bind="attrs" v-on="on">
-                    Guardar
-                  </v-btn>
-                </template>
-                <v-list>
-                  <v-list-item>
-                    <v-list-item-title>Guardar como borrador</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-list-item-title>Guardar y enviar por email</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
             </v-col>
           </v-row>
         </v-form>
@@ -342,7 +327,7 @@ export default {
     }
   },
   watch: {
-    ventaEditada(newValue) {
+    ventaEditada (newValue) {
       if (newValue) {
         this.cargarVenta(newValue)
       }
@@ -379,7 +364,6 @@ export default {
       }
     },
     cargarVenta (venta) {
-
       this.contactoSeleccionado = null
       this.telefono = ''
       this.filas = [{
@@ -398,7 +382,7 @@ export default {
       if (contacto) {
         this.contactoSeleccionado = contacto.id
         this.telefono = contacto.telefono
-      } 
+      }
 
       // Asignar datos básicos
       this.numeroNota = venta.nonota || ''
@@ -423,17 +407,17 @@ export default {
             cantidad: producto.cantidad || 1,
             total: producto.total || 0
           }
-        } 
-          return {
-            item: null,
-            referencia: producto.referencia || '',
-            precio: producto.precio || 0,
-            descuento: producto.descuento || 0,
-            impuesto: producto.impuesto || 0,
-            descripcion: producto.descripcion || '',
-            cantidad: producto.cantidad || 1,
-            total: producto.total || 0
-          }
+        }
+        return {
+          item: null,
+          referencia: producto.referencia || '',
+          precio: producto.precio || 0,
+          descuento: producto.descuento || 0,
+          impuesto: producto.impuesto || 0,
+          descripcion: producto.descripcion || '',
+          cantidad: producto.cantidad || 1,
+          total: producto.total || 0
+        }
       })
 
       // Recalcular totales
@@ -498,7 +482,7 @@ export default {
       })
 
       const productosValidos = productos.every(p =>
-    p.nombreproducto &&
+        p.nombreproducto &&
     p.referencia &&
     p.precio >= 0 &&
     p.cantidad > 0 &&
