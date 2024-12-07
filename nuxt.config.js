@@ -23,9 +23,12 @@ export default {
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
     ]
   },
+  target: 'static',
+  // Configuración para generación estática
   generate: {
     dir: 'dist' // Esto debe coincidir con tu `output_location` en el flujo de trabajo
   },
+
   server: {
     port: process.env.PORT,
     host: '0.0.0.0'
@@ -33,10 +36,12 @@ export default {
 
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
+    // Aquí puedes agregar archivos CSS globales si los tienes
   ],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
+    // Aquí puedes agregar tus plugins si es necesario
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -44,25 +49,22 @@ export default {
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [
-    // https://go.nuxtjs.dev/eslint
-    '@nuxtjs/eslint-module',
-    // https://go.nuxtjs.dev/vuetify
-    '@nuxtjs/vuetify'
+    '@nuxtjs/eslint-module', // ESLint para calidad de código
+    '@nuxtjs/vuetify' // Vuetify para la UI
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
-    // https://go.nuxtjs.dev/axios
-    '@nuxtjs/auth-next',
-    '@nuxtjs/axios'
+    '@nuxtjs/auth-next', // Autenticación para la aplicación
+    '@nuxtjs/axios' // Axios para realizar peticiones HTTP
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
-    // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: process.env.API_BACKEND
+    baseURL: process.env.API_BACKEND // La URL de tu API backend
   },
 
+  // Configuración de autenticación
   auth: {
     strategies: {
       local: {
@@ -83,17 +85,17 @@ export default {
       }
     },
     redirect: {
-      login: '/',
-      logout: '/',
-      home: '/dashboard'
+      login: '/', // Redirección a la página de login
+      logout: '/', // Redirección al logout
+      home: '/dashboard' // Página a la que se redirige después del login
     }
   },
 
-  // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
+  // Configuración de Vuetify
   vuetify: {
-    customVariables: ['~/assets/variables.scss'],
+    customVariables: ['~/assets/variables.scss'], // Archivos SCSS personalizados para Vuetify
     theme: {
-      dark: false,
+      dark: false, // No activar el tema oscuro por defecto
       themes: {
         dark: {
           primary: colors.blue.darken2,
@@ -110,5 +112,6 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    // Aquí puedes agregar configuraciones personalizadas para el proceso de construcción
   }
 }
