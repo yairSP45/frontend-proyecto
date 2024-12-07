@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[21],{635:function(t,n,o){"use strict";o.r(n);var c={components:{contactos:o(626).default},layout:"dashboard",middleware:"auth"},e=o(67),component=Object(e.a)(c,(function(){return(0,this._self._c)("contactos")}),[],!1,null,"67c5ae66",null);n.default=component.exports}}]);
