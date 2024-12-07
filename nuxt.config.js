@@ -23,7 +23,9 @@ export default {
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
     ]
   },
-  target: 'static',
+  generate: {
+    dir: 'dist' // Esto debe coincidir con tu `output_location` en el flujo de trabajo
+  },
   server: {
     port: process.env.PORT,
     host: '0.0.0.0'
